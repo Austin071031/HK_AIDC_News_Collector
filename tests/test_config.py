@@ -11,7 +11,7 @@ def test_settings_default_values() -> None:
         app_env="test",
         database_url="sqlite+pysqlite:///:memory:",
         firecrawl_api_key="firecrawl-test",
-        llm_api_key="llm-test",
+        openai_api_key="openai-test",
     )
 
     assert settings.app_env == "test"
@@ -26,7 +26,7 @@ def test_settings_reject_invalid_app_env(app_env: str) -> None:
             app_env=app_env,
             database_url="sqlite+pysqlite:///:memory:",
             firecrawl_api_key="firecrawl-test",
-            llm_api_key="llm-test",
+            openai_api_key="openai-test",
         )
 
 
@@ -35,7 +35,7 @@ def test_settings_reject_invalid_app_env(app_env: str) -> None:
     [
         ("database_url", "   "),
         ("firecrawl_api_key", " "),
-        ("llm_api_key", "\t"),
+        ("openai_api_key", "\t"),
     ],
 )
 def test_settings_reject_blank_critical_values(
@@ -46,7 +46,7 @@ def test_settings_reject_blank_critical_values(
         "app_env": "test",
         "database_url": "sqlite+pysqlite:///:memory:",
         "firecrawl_api_key": "firecrawl-test",
-        "llm_api_key": "llm-test",
+        "openai_api_key": "openai-test",
     }
     settings_kwargs[field_name] = field_value
 
@@ -62,7 +62,7 @@ def test_settings_loads_project_env_file_when_cwd_changes(
     monkeypatch.delenv("APP_ENV", raising=False)
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
-    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     project_env_file.write_text(
         "\n".join(
@@ -70,7 +70,7 @@ def test_settings_loads_project_env_file_when_cwd_changes(
                 "APP_ENV=test",
                 "DATABASE_URL=sqlite+pysqlite:///:memory:",
                 "FIRECRAWL_API_KEY=firecrawl-test",
-                "LLM_API_KEY=llm-test",
+                "OPENAI_API_KEY=openai-test",
             ]
         ),
         encoding="utf-8",
@@ -85,4 +85,4 @@ def test_settings_loads_project_env_file_when_cwd_changes(
     assert settings.app_env == "test"
     assert settings.database_url == "sqlite+pysqlite:///:memory:"
     assert settings.firecrawl_api_key == "firecrawl-test"
-    assert settings.llm_api_key == "llm-test"
+    assert settings.openai_api_key == "openai-test"

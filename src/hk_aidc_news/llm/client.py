@@ -15,9 +15,11 @@ class OpenAiCompatibleLlmClient:
             "Classify and summarize this article in JSON. "
             f"Language: {language}\nTitle: {title}\nBody: {body[:4000]}"
         )
-        response = await self.client.responses.parse(
+        response = await self.client.beta.chat.completions.parse(
             model=self.model,
-            input=prompt,
-            text_format=EnrichmentResult,
+            messages=[{"role": "user", "content": prompt}],
+            response_format=EnrichmentResult,
         )
-        return response.output_parsed
+        if not response.choices or not response.choices[0].message.parsed:
+            raise ValueError("Failed to parse response")
+        return response.choices[0].message.parsed

@@ -63,6 +63,19 @@ def test_daily_job_persists_records(client, db_session, monkeypatch):
     monkeypatch.setattr("hk_aidc_news.api.routes.jobs.run_daily_discovery", mock_discovery)
     monkeypatch.setattr("hk_aidc_news.ingestion.service.is_viable_candidate", lambda x: True)
 
+    from hk_aidc_news.llm.schemas import EnrichmentResult
+    async def mock_enrich(*args, **kwargs):
+        return EnrichmentResult(
+            relevance="direct",
+            confidence=0.9,
+            rationale="mock",
+            tags=["mock"],
+            entities=["mock"],
+            summary="mock summary",
+            semantic_key="mock-key"
+        )
+    monkeypatch.setattr("hk_aidc_news.llm.client.OpenAiCompatibleLlmClient.enrich", mock_enrich)
+
     response = client.post("/api/jobs/run-daily")
     assert response.status_code == 202
     

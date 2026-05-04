@@ -28,32 +28,39 @@ class EnrichmentService:
 
 async def run_daily_enrichment(
     documents: list[dict],
+    enrichment_service: EnrichmentService,
+    model_name: str,
     db_session: Session | None = None,
 ) -> list[dict]:
     enriched_docs = []
     for doc in documents:
+        result = await enrichment_service.enrich(
+            title=doc.get("title", ""),
+            body=doc.get("body", ""),
+            language=doc.get("language", "en")
+        )
+        
         enriched_doc = dict(doc)
-        # Stub values for now
-        enriched_doc["relevance"] = "high"
-        enriched_doc["confidence"] = 0.9
-        enriched_doc["rationale"] = "stub rationale"
-        enriched_doc["tags"] = []
-        enriched_doc["entities"] = []
-        enriched_doc["summary"] = "stub summary"
-        enriched_doc["semantic_key"] = doc.get("canonical_url", "")
+        enriched_doc["relevance"] = result.relevance
+        enriched_doc["confidence"] = result.confidence
+        enriched_doc["rationale"] = result.rationale
+        enriched_doc["tags"] = result.tags
+        enriched_doc["entities"] = result.entities
+        enriched_doc["summary"] = result.summary
+        enriched_doc["semantic_key"] = result.semantic_key
         enriched_docs.append(enriched_doc)
         
         if db_session:
             record = EnrichmentRecord(
                 raw_document_id=doc.get("id"),
-                relevance="high",
-                confidence=0.9,
-                rationale="stub rationale",
-                tags=[],
-                entities=[],
-                summary="stub summary",
-                semantic_key=enriched_doc["semantic_key"],
-                model_name="stub_model"
+                relevance=result.relevance,
+                confidence=result.confidence,
+                rationale=result.rationale,
+                tags=result.tags,
+                entities=result.entities,
+                summary=result.summary,
+                semantic_key=result.semantic_key,
+                model_name=model_name
             )
             db_session.add(record)
             
