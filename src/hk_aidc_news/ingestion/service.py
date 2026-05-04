@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 
 from hk_aidc_news.discovery.schemas import DiscoveryCandidate
 from hk_aidc_news.ingestion.extractor import extract_text
+from hk_aidc_news.ingestion.prefilter import is_viable_candidate
 
 
 def normalize_candidate(
@@ -23,4 +24,5 @@ def normalize_candidate(
 def run_daily_ingestion(
     candidates: Iterable[DiscoveryCandidate],
 ) -> list[dict[str, str]]:
-    return [normalize_candidate(candidate, "") for candidate in candidates]
+    normalized = (normalize_candidate(candidate, "") for candidate in candidates)
+    return [doc for doc in normalized if is_viable_candidate(doc)]
