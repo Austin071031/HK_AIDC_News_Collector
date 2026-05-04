@@ -1,0 +1,33 @@
+sources:
+  - name: HKTDC Research
+    base_url: https://research.hktdc.com
+    region: hong_kong
+    language: en
+    source_type: research
+    discovery_mode: rss
+    priority: 1
+    active: true
+  - name: SCMP Tech
+    base_url: https://www.scmp.com
+    region: hong_kong
+    language: en
+    source_type: media
+    discovery_mode: search
+    priority: 1
+    active: true
+  - name: 36Kr
+    base_url: https://36kr.com
+    region: mainland_china
+    language: zh
+    source_type: media
+    discovery_mode: search
+    priority: 1
+    active: true
+  - name: Data Center Dynamics APAC
+    base_url: https://www.datacenterdynamics.com
+    region: southeast_asia
+    language: en
+    source_type: industry_media
+    discovery_mode: rss
+    priority: 1
+    active: true
