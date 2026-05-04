@@ -11,6 +11,7 @@ def create_engine_and_sessionmaker(
         bind=engine,
         autoflush=False,
         autocommit=False,
+        expire_on_commit=False,
         future=True,
     )
     return engine, session_factory
