@@ -47,9 +47,12 @@ def fixture_client(db_session):
     app.dependency_overrides[get_session] = override_get_session
     return TestClient(app)
 
-def test_daily_job_persists_records(client, db_session, monkeypatch):
+def test_daily_job_persists_records(client, db_session, db_session_factory, monkeypatch):
     from hk_aidc_news.discovery.schemas import DiscoveryCandidate
     
+    # Mock the session_factory in the worker so it uses the test database
+    monkeypatch.setattr("hk_aidc_news.worker.session_factory", db_session_factory)
+
     async def mock_discovery(*args, **kwargs):
         return [
             DiscoveryCandidate(
@@ -60,7 +63,8 @@ def test_daily_job_persists_records(client, db_session, monkeypatch):
             )
         ]
         
-    monkeypatch.setattr("hk_aidc_news.api.routes.jobs.run_daily_discovery", mock_discovery)
+    monkeypatch.setattr("hk_aidc_news.worker.run_daily_discovery", mock_discovery)
+
     monkeypatch.setattr("hk_aidc_news.ingestion.service.is_viable_candidate", lambda x: True)
 
     from hk_aidc_news.llm.schemas import EnrichmentResult
