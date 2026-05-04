@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from hk_aidc_news.clustering.service import run_daily_clustering
+from hk_aidc_news.db import get_session
 from hk_aidc_news.discovery.service import run_daily_discovery
 from hk_aidc_news.enrichment.service import run_daily_enrichment
 from hk_aidc_news.ingestion.service import run_daily_ingestion
@@ -9,9 +11,9 @@ router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 
 @router.post("/run-daily", status_code=202)
-async def run_daily() -> dict[str, str]:
+async def run_daily(db_session: Session = Depends(get_session)) -> dict[str, str]:
     discovered = await run_daily_discovery()
-    ingested = run_daily_ingestion(discovered)
-    enriched = await run_daily_enrichment(ingested)
-    run_daily_clustering(enriched)
+    ingested = run_daily_ingestion(discovered, db_session)
+    enriched = await run_daily_enrichment(ingested, db_session)
+    run_daily_clustering(enriched, db_session)
     return {"status": "accepted"}

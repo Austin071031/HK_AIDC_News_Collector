@@ -1,7 +1,9 @@
+from collections.abc import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from hk_aidc_news.config import Settings
 
 def create_engine_and_sessionmaker(
     database_url: str,
@@ -15,3 +17,10 @@ def create_engine_and_sessionmaker(
         future=True,
     )
     return engine, session_factory
+
+settings = Settings()
+engine, session_factory = create_engine_and_sessionmaker(settings.database_url)
+
+def get_session() -> Generator[Session, None, None]:
+    with session_factory() as session:
+        yield session
