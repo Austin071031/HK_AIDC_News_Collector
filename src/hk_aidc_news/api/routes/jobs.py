@@ -12,8 +12,13 @@ router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 @router.post("/run-daily", status_code=202)
 async def run_daily(db_session: Session = Depends(get_session)) -> dict[str, str]:
-    discovered = await run_daily_discovery()
-    ingested = run_daily_ingestion(discovered, db_session)
-    enriched = await run_daily_enrichment(ingested, db_session)
-    run_daily_clustering(enriched, db_session)
-    return {"status": "accepted"}
+    try:
+        discovered = await run_daily_discovery()
+        ingested = run_daily_ingestion(discovered, db_session)
+        enriched = await run_daily_enrichment(ingested, db_session)
+        run_daily_clustering(enriched, db_session)
+        db_session.commit()
+        return {"status": "accepted"}
+    except Exception:
+        db_session.rollback()
+        raise

@@ -58,6 +58,6 @@ async def run_daily_enrichment(
             db_session.add(record)
             
     if db_session:
-        db_session.commit()
+        db_session.flush()
         
     return enriched_docs

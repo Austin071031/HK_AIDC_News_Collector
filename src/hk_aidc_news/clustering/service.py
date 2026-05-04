@@ -34,7 +34,7 @@ def run_daily_clustering(
                     headline=c["headline"]
                 )
                 db_session.add(cluster_model)
-                db_session.commit()
+                db_session.flush()
                 cluster_id = cluster_model.id
             else:
                 cluster_id = existing.id
@@ -52,6 +52,6 @@ def run_daily_clustering(
                         reason="stub reason"
                     )
                     db_session.add(ci)
-        db_session.commit()
+        db_session.flush()
         
     return clusters

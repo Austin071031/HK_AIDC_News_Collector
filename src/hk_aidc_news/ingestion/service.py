@@ -45,7 +45,7 @@ def run_daily_ingestion(
                     crawled_at=doc["crawled_at"],
                 )
                 db_session.add(rd)
-                db_session.commit()
+                db_session.flush()
                 doc["id"] = rd.id
             else:
                 doc["id"] = existing.id
