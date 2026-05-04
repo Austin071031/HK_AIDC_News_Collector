@@ -14,3 +14,7 @@ def cluster_articles(articles: list[dict]) -> list[dict]:
         bucket["items"].append(article)
 
     return list(grouped.values())
+
+
+def run_daily_clustering(articles: list[dict]) -> list[dict]:
+    return cluster_articles(articles)

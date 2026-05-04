@@ -10,3 +10,12 @@ def test_cluster_feed_endpoint_returns_items() -> None:
 
     assert response.status_code == 200
     assert response.json()["items"] == []
+
+
+def test_manual_run_endpoint_returns_accepted() -> None:
+    client = TestClient(create_app())
+
+    response = client.post("/api/jobs/run-daily")
+
+    assert response.status_code == 202
+    assert response.json()["status"] == "accepted"

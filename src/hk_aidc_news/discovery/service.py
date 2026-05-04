@@ -47,3 +47,9 @@ class DiscoveryService:
                 )
 
         return merged
+
+
+async def run_daily_discovery(
+    collectors: Iterable[DiscoveryCollector] | None = None,
+) -> list[DiscoveryCandidate]:
+    return await DiscoveryService(collectors or []).collect()

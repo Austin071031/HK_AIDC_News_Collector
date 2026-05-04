@@ -22,3 +22,9 @@ class EnrichmentService:
                 summary="",
                 semantic_key="",
             )
+
+
+async def run_daily_enrichment(
+    documents: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    return documents

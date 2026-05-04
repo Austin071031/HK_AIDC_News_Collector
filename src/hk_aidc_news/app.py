@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from hk_aidc_news.api.routes.clusters import router as cluster_router
 from hk_aidc_news.api.routes.health import router as health_router
+from hk_aidc_news.api.routes.jobs import router as jobs_router
 
 
 def create_app() -> FastAPI:
@@ -9,4 +10,5 @@ def create_app() -> FastAPI:
     app = FastAPI(title="HK AIDC News Collector")
     app.include_router(health_router)
     app.include_router(cluster_router)
+    app.include_router(jobs_router)
     return app

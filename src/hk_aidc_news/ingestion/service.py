@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 from datetime import UTC, datetime
 
 from hk_aidc_news.discovery.schemas import DiscoveryCandidate
@@ -17,3 +18,9 @@ def normalize_candidate(
         "raw_text": extract_text(raw_html),
         "crawled_at": datetime.now(UTC).isoformat(),
     }
+
+
+def run_daily_ingestion(
+    candidates: Iterable[DiscoveryCandidate],
+) -> list[dict[str, str]]:
+    return [normalize_candidate(candidate, "") for candidate in candidates]
