@@ -34,37 +34,40 @@ async def run_daily_enrichment(
 ) -> list[dict]:
     enriched_docs = []
     for doc in documents:
-        result = await enrichment_service.enrich(
-            title=doc.get("title", ""),
-            body=doc.get("body", ""),
-            language=doc.get("language", "en")
-        )
-        
-        enriched_doc = dict(doc)
-        enriched_doc["relevance"] = result.relevance
-        enriched_doc["confidence"] = result.confidence
-        enriched_doc["rationale"] = result.rationale
-        enriched_doc["tags"] = result.tags
-        enriched_doc["entities"] = result.entities
-        enriched_doc["summary"] = result.summary
-        enriched_doc["semantic_key"] = result.semantic_key
-        enriched_docs.append(enriched_doc)
-        
-        if db_session:
-            record = EnrichmentRecord(
-                raw_document_id=doc.get("id"),
-                relevance=result.relevance,
-                confidence=result.confidence,
-                rationale=result.rationale,
-                tags=result.tags,
-                entities=result.entities,
-                summary=result.summary,
-                semantic_key=result.semantic_key,
-                model_name=model_name
+        try:
+            result = await enrichment_service.enrich(
+                title=doc.get("title", ""),
+                body=doc.get("body", ""),
+                language=doc.get("language", "en")
             )
-            db_session.add(record)
             
-    if db_session:
-        db_session.flush()
-        
+            enriched_doc = dict(doc)
+            enriched_doc["relevance"] = result.relevance
+            enriched_doc["confidence"] = result.confidence
+            enriched_doc["rationale"] = result.rationale
+            enriched_doc["tags"] = result.tags
+            enriched_doc["entities"] = result.entities
+            enriched_doc["summary"] = result.summary
+            enriched_doc["semantic_key"] = result.semantic_key
+            enriched_docs.append(enriched_doc)
+            
+            if db_session:
+                record = EnrichmentRecord(
+                    raw_document_id=doc.get("id"),
+                    relevance=result.relevance,
+                    confidence=result.confidence,
+                    rationale=result.rationale,
+                    tags=result.tags,
+                    entities=result.entities,
+                    summary=result.summary,
+                    semantic_key=result.semantic_key,
+                    model_name=model_name
+                )
+                db_session.add(record)
+                db_session.flush()
+        except Exception:
+            if db_session:
+                db_session.rollback()
+            continue
+            
     return enriched_docs

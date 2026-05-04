@@ -11,6 +11,11 @@ from hk_aidc_news.models.raw_document import RawDocument
 def normalize_candidate(
     candidate: DiscoveryCandidate, raw_html: str
 ) -> dict[str, str]:
+    try:
+        raw_text = extract_text(raw_html)
+    except Exception:
+        raw_text = ""
+
     return {
         "url": candidate.url,
         "canonical_url": candidate.url,
@@ -18,7 +23,7 @@ def normalize_candidate(
         "source_name": candidate.source_name,
         "discovered_via": candidate.discovered_via,
         "raw_html": raw_html,
-        "raw_text": extract_text(raw_html),
+        "raw_text": raw_text,
         "crawled_at": datetime.now(UTC).isoformat(),
     }
 
@@ -27,27 +32,43 @@ def run_daily_ingestion(
     candidates: Iterable[DiscoveryCandidate],
     db_session: Session | None = None,
 ) -> list[dict]:
-    normalized = (normalize_candidate(candidate, "") for candidate in candidates)
+    normalized = []
+    for candidate in candidates:
+        try:
+            doc = normalize_candidate(candidate, "")
+            normalized.append(doc)
+        except Exception:
+            # Ensure it doesn't crash the pipeline but continue processing the rest
+            continue
+
     viable = [doc for doc in normalized if is_viable_candidate(doc)]
     
+    final_docs = []
     if db_session:
         for doc in viable:
-            existing = db_session.query(RawDocument).filter_by(canonical_url=doc["canonical_url"]).first()
-            if not existing:
-                rd = RawDocument(
-                    url=doc["url"],
-                    canonical_url=doc["canonical_url"],
-                    title=doc["title"],
-                    source_name=doc["source_name"],
-                    discovered_via=doc["discovered_via"],
-                    raw_html=doc["raw_html"],
-                    raw_text=doc["raw_text"],
-                    crawled_at=doc["crawled_at"],
-                )
-                db_session.add(rd)
-                db_session.flush()
-                doc["id"] = rd.id
-            else:
-                doc["id"] = existing.id
+            try:
+                existing = db_session.query(RawDocument).filter_by(canonical_url=doc["canonical_url"]).first()
+                if not existing:
+                    rd = RawDocument(
+                        url=doc["url"],
+                        canonical_url=doc["canonical_url"],
+                        title=doc["title"],
+                        source_name=doc["source_name"],
+                        discovered_via=doc["discovered_via"],
+                        raw_html=doc["raw_html"],
+                        raw_text=doc["raw_text"],
+                        crawled_at=doc["crawled_at"],
+                    )
+                    db_session.add(rd)
+                    db_session.flush()
+                    doc["id"] = rd.id
+                else:
+                    doc["id"] = existing.id
+                final_docs.append(doc)
+            except Exception:
+                db_session.rollback()
+                continue
+    else:
+        final_docs = viable
                 
-    return viable
+    return final_docs
