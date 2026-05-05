@@ -30,11 +30,11 @@ def test_normalize_candidate_builds_raw_document_payload() -> None:
 def test_run_daily_ingestion_partial_failure(monkeypatch) -> None:
     from hk_aidc_news.ingestion.service import run_daily_ingestion
 
-    c1 = DiscoveryCandidate(url="http://fail", title="Fail", source_name="src", discovered_via="rss")
-    c2 = DiscoveryCandidate(url="http://pass", title="Pass", source_name="src", discovered_via="rss")
+    c1 = DiscoveryCandidate(url="http://example.com/fail", title="Fail", source_name="src", discovered_via="rss")
+    c2 = DiscoveryCandidate(url="http://example.com/pass", title="Pass", source_name="src", discovered_via="rss")
 
     def mock_normalize(candidate, html):
-        if candidate.url == "http://fail":
+        if "fail" in candidate.url:
             raise RuntimeError("extraction failed")
         return {
             "url": candidate.url,
@@ -43,7 +43,7 @@ def test_run_daily_ingestion_partial_failure(monkeypatch) -> None:
             "source_name": candidate.source_name,
             "discovered_via": candidate.discovered_via,
             "raw_html": html,
-            "raw_text": "Long enough text to pass the prefilter... " * 5,
+            "raw_text": "Long enough text to pass the prefilter about data centers and ai GPUs... " * 5,
             "crawled_at": "2024-01-01T00:00:00Z"
         }
 
@@ -53,5 +53,5 @@ def test_run_daily_ingestion_partial_failure(monkeypatch) -> None:
     results = run_daily_ingestion([c1, c2])
     
     assert len(results) == 1
-    assert results[0]["url"] == "http://pass"
+    assert results[0]["url"] == "http://example.com/pass"
 
