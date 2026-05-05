@@ -1,14 +1,13 @@
 from collections.abc import Iterable
-from typing import Protocol
+from typing import Protocol, List, Optional
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from hk_aidc_news.discovery.schemas import DiscoveryCandidate
 
 
 class DiscoveryCollector(Protocol):
-    async def collect(self) -> list[DiscoveryCandidate]:
+    async def collect(self) -> List[DiscoveryCandidate]:
         ...
-
 
 def canonicalize_url(url: str) -> str:
     parts = urlsplit(url)
@@ -23,12 +22,12 @@ def canonicalize_url(url: str) -> str:
 
 
 class DiscoveryService:
-    def __init__(self, collectors: Iterable[DiscoveryCollector]) -> None:
+    def __init__(self, collectors: Iterable) -> None:
         self.collectors = list(collectors)
 
-    async def collect(self) -> list[DiscoveryCandidate]:
-        seen: set[str] = set()
-        merged: list[DiscoveryCandidate] = []
+    async def collect(self) -> List[DiscoveryCandidate]:
+        seen: set = set()
+        merged: List[DiscoveryCandidate] = []
 
         for collector in self.collectors:
             for item in await collector.collect():
@@ -50,6 +49,6 @@ class DiscoveryService:
 
 
 async def run_daily_discovery(
-    collectors: Iterable[DiscoveryCollector] | None = None,
-) -> list[DiscoveryCandidate]:
+    collectors: Optional[Iterable] = None,
+) -> List[DiscoveryCandidate]:
     return await DiscoveryService(collectors or []).collect()

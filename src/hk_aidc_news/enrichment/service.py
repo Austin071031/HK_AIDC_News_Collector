@@ -1,3 +1,4 @@
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from hk_aidc_news.llm.schemas import EnrichmentResult
 from hk_aidc_news.models.enrichment import EnrichmentRecord
@@ -27,11 +28,13 @@ class EnrichmentService:
 
 
 async def run_daily_enrichment(
-    documents: list[dict],
+    documents: List[Dict],
     enrichment_service: EnrichmentService,
     model_name: str,
-    db_session: Session | None = None,
-) -> list[dict]:
+    db_session: Optional[Session] = None,
+    relevance_threshold: float = 0.6,
+    entity_threshold: float = 0.5,
+) -> List[Dict]:
     enriched_docs = []
     for doc in documents:
         try:
@@ -40,6 +43,15 @@ async def run_daily_enrichment(
                 body=doc.get("body", ""),
                 language=doc.get("language", "en")
             )
+            
+            # Thresholding logic based on spec
+            if result.confidence < relevance_threshold:
+                result.relevance = "noise"
+                result.rationale = f"[LOW CONFIDENCE] {result.rationale}"
+                result.tags = []
+                
+            if result.confidence < entity_threshold:
+                result.entities = []
             
             enriched_doc = dict(doc)
             enriched_doc["relevance"] = result.relevance

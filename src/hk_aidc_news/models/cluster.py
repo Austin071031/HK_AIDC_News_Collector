@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,5 +18,5 @@ class ClusterItem(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     cluster_id: Mapped[int] = mapped_column(ForeignKey("clusters.id"))
-    raw_document_id: Mapped[int | None] = mapped_column(ForeignKey("raw_documents.id"))
+    raw_document_id: Mapped[Optional[int]] = mapped_column(ForeignKey("raw_documents.id"))
     reason: Mapped[str] = mapped_column(String(255), default="")

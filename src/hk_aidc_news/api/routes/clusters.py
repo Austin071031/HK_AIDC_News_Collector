@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func, and_, or_, String
@@ -16,16 +16,16 @@ router = APIRouter(prefix="/api/clusters", tags=["clusters"])
 
 @router.get("")
 def list_clusters(
-    region: str | None = None,
-    language: str | None = None,
-    source_type: str | None = None,
-    start_date: date | None = None,
-    end_date: date | None = None,
-    relevance: str | None = None,
-    analyst_status: str | None = None,
-    topic_tag: str | None = None,
+    region: Optional[str] = None,
+    language: Optional[str] = None,
+    source_type: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    relevance: Optional[str] = None,
+    analyst_status: Optional[str] = None,
+    topic_tag: Optional[str] = None,
     db: Session = Depends(get_session),
-) -> dict[str, list[dict[str, Any]]]:
+) -> dict:
     stmt = select(Cluster)
     
     needs_join = any([region, language, source_type, start_date, end_date, relevance, analyst_status, topic_tag])
@@ -66,6 +66,10 @@ def list_clusters(
                 stmt = stmt.where(AnalystAction.is_favorite == True)
             elif analyst_status == "unread":
                 stmt = stmt.where(or_(AnalystAction.id == None, and_(AnalystAction.is_hidden == False, AnalystAction.is_favorite == False)))
+        else:
+            # Default behavior: exclude hidden clusters
+            stmt = stmt.outerjoin(AnalystAction, AnalystAction.cluster_id == Cluster.id)
+            stmt = stmt.where(or_(AnalystAction.id == None, AnalystAction.is_hidden == False))
             
         stmt = stmt.distinct()
 
@@ -112,18 +116,46 @@ def list_clusters(
     return {"items": items}
 
 @router.get("/{cluster_id}")
-def get_cluster(cluster_id: int, db: Session = Depends(get_session)) -> dict[str, Any]:
+def get_cluster(cluster_id: int, db: Session = Depends(get_session)) -> dict:
     cluster = db.get(Cluster, cluster_id)
     if not cluster:
         raise HTTPException(status_code=404, detail="Cluster not found")
         
-    # In a real app we'd fetch related items, but for now we just return the skeleton
     items_in_db = db.scalars(select(ClusterItem).where(ClusterItem.cluster_id == cluster_id)).all()
+    
+    rationale = ""
+    extracted_entities = []
+    articles = []
+    
+    for item in items_in_db:
+        if not item.raw_document_id:
+            continue
+            
+        raw_doc = db.get(RawDocument, item.raw_document_id)
+        if not raw_doc:
+            continue
+            
+        enrichment = db.scalars(select(EnrichmentRecord).where(EnrichmentRecord.raw_document_id == raw_doc.id)).first()
+        
+        # Grab rationale and entities from the first item that has them
+        if enrichment and not rationale:
+            rationale = enrichment.rationale
+            extracted_entities = enrichment.entities
+            
+        articles.append({
+            "id": raw_doc.id,
+            "title": raw_doc.title,
+            "url": raw_doc.url,
+            "source_name": raw_doc.source_name,
+            "crawled_at": raw_doc.crawled_at
+        })
     
     return {
         "id": cluster.id,
         "cluster_id": cluster.cluster_key,
         "headline": cluster.headline,
-        "items": [{"id": item.id, "raw_document_id": item.raw_document_id} for item in items_in_db]
+        "rationale": rationale,
+        "extracted_entities": extracted_entities,
+        "articles": articles
     }
 

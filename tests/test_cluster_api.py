@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from hk_aidc_news.models.cluster import Cluster
 from hk_aidc_news.models.analyst_action import AnalystAction
 
@@ -30,7 +32,7 @@ def test_cluster_detail_endpoint(client, db_session) -> None:
     data = response.json()
     assert data["id"] == cluster.id
     assert data["headline"] == "Detail Headline"
-    assert "items" in data
+    assert "articles" in data
 
 def test_cluster_actions_endpoint(client, db_session) -> None:
     cluster = Cluster(cluster_key="test-action", headline="Action Headline")
@@ -56,7 +58,9 @@ def test_cluster_actions_endpoint(client, db_session) -> None:
     assert action.notes == "Test notes"
     assert "urgent,review" in action.tags
 
-def test_manual_run_endpoint_returns_accepted(client) -> None:
+@patch("hk_aidc_news.api.routes.jobs.run_daily_pipeline_task")
+def test_manual_run_endpoint_returns_accepted(mock_task, client) -> None:
     response = client.post("/api/jobs/run-daily")
     assert response.status_code == 202
     assert response.json()["status"] == "accepted"
+    mock_task.assert_called_once()

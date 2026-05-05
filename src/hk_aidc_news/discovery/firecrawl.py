@@ -1,4 +1,5 @@
 import httpx
+from typing import List
 from hk_aidc_news.discovery.schemas import DiscoveryCandidate
 
 class FirecrawlCollector:
@@ -12,7 +13,7 @@ class FirecrawlCollector:
         self.base_url = base_url
         self.query = query
 
-    async def collect(self) -> list[DiscoveryCandidate]:
+    async def collect(self) -> List[DiscoveryCandidate]:
         if not self.api_key:
             return []
 

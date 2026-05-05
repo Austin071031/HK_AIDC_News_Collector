@@ -7,16 +7,18 @@ import httpx
 
 from hk_aidc_news.discovery.schemas import DiscoveryCandidate
 
+from typing import List, Dict
+
 logger = logging.getLogger(__name__)
 
 class RssCollector:
-    def __init__(self, feeds: dict[str, str]) -> None:
+    def __init__(self, feeds: Dict[str, str]) -> None:
         """
         feeds: A mapping of source_name to RSS feed URL
         """
         self.feeds = feeds
 
-    async def _fetch_feed(self, client: httpx.AsyncClient, source_name: str, url: str) -> list[DiscoveryCandidate]:
+    async def _fetch_feed(self, client: httpx.AsyncClient, source_name: str, url: str) -> List[DiscoveryCandidate]:
         try:
             response = await client.get(url, timeout=10.0)
             response.raise_for_status()
@@ -41,7 +43,7 @@ class RssCollector:
             logger.error(f"Error fetching RSS feed for {source_name} at {url}: {e}")
             return []
 
-    async def collect(self) -> list[DiscoveryCandidate]:
+    async def collect(self) -> List[DiscoveryCandidate]:
         candidates = []
         async with httpx.AsyncClient() as client:
             tasks = [

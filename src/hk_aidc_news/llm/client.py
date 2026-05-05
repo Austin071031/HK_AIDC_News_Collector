@@ -1,11 +1,10 @@
+from typing import Optional
 from openai import AsyncOpenAI
-
 from hk_aidc_news.llm.schemas import EnrichmentResult
-
 
 class OpenAiCompatibleLlmClient:
     def __init__(
-        self, api_key: str, model: str, base_url: str | None = None
+        self, api_key: str, model: str, base_url: Optional[str] = None
     ) -> None:
         self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
         self.model = model

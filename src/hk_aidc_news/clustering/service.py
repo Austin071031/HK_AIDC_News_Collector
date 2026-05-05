@@ -1,28 +1,31 @@
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
+
 from hk_aidc_news.models.cluster import Cluster, ClusterItem
 
-def cluster_articles(articles: list[dict]) -> list[dict]:
-    grouped: dict[str, dict] = {}
-
-    for article in articles:
-        key = article.get("semantic_key") or article.get("canonical_url", "")
-        bucket = grouped.setdefault(
-            key,
-            {
-                "cluster_key": key,
-                "headline": article.get("title", ""),
-                "items": [],
-            },
-        )
-        bucket["items"].append(article)
-
-    return list(grouped.values())
+def cluster_articles(articles: List[Dict]) -> List[Dict]:
+    clusters_map = {}
+    for doc in articles:
+        semantic_key = doc.get("semantic_key", doc.get("canonical_url", doc.get("url")))
+        if not semantic_key:
+            continue
+            
+        if semantic_key not in clusters_map:
+            clusters_map[semantic_key] = {
+                "cluster_key": semantic_key,
+                "headline": doc.get("title", "Untitled"),
+                "items": []
+            }
+            
+        clusters_map[semantic_key]["items"].append(doc)
+        
+    return list(clusters_map.values())
 
 
 def run_daily_clustering(
-    articles: list[dict],
-    db_session: Session | None = None,
-) -> list[dict]:
+    articles: List[Dict],
+    db_session: Optional[Session] = None,
+) -> List[Dict]:
     clusters = cluster_articles(articles)
     
     if db_session:

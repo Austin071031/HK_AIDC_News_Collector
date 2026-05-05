@@ -1,5 +1,6 @@
+from typing import Dict, List, Optional
 from collections.abc import Iterable
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from hk_aidc_news.discovery.schemas import DiscoveryCandidate
@@ -10,7 +11,7 @@ from hk_aidc_news.models.raw_document import RawDocument
 
 def normalize_candidate(
     candidate: DiscoveryCandidate, raw_html: str
-) -> dict[str, str]:
+) -> Dict:
     try:
         raw_text = extract_text(raw_html)
     except Exception:
@@ -24,14 +25,14 @@ def normalize_candidate(
         "discovered_via": candidate.discovered_via,
         "raw_html": raw_html,
         "raw_text": raw_text,
-        "crawled_at": datetime.now(UTC).isoformat(),
+        "crawled_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
 def run_daily_ingestion(
-    candidates: Iterable[DiscoveryCandidate],
-    db_session: Session | None = None,
-) -> list[dict]:
+    candidates: Iterable,
+    db_session: Optional[Session] = None,
+) -> List[Dict]:
     normalized = []
     for candidate in candidates:
         try:

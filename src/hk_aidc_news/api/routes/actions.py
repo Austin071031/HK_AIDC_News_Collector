@@ -1,4 +1,6 @@
 
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -13,15 +15,15 @@ router = APIRouter(prefix="/api/clusters", tags=["actions"])
 class ActionPayload(BaseModel):
     is_hidden: bool = False
     is_favorite: bool = False
-    notes: str | None = None
-    tags: list[str] | None = None
+    notes: Optional[str] = None
+    tags: Optional[list] = None
 
 @router.post("/{cluster_id}/actions")
-def perform_cluster_action(
+def submit_action(
     cluster_id: int, 
     payload: ActionPayload, 
     db: Session = Depends(get_session)
-) -> dict[str, str]:
+) -> dict:
     cluster = db.get(Cluster, cluster_id)
     if not cluster:
         raise HTTPException(status_code=404, detail="Cluster not found")

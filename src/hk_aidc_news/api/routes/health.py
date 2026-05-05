@@ -1,9 +1,7 @@
 from fastapi import APIRouter
 
-router = APIRouter()
+router = APIRouter(prefix="/api/health", tags=["health"])
 
-
-@router.get("/health")
-def health() -> dict[str, str]:
-    # Keep the first route tiny: it doubles as a readiness probe and test target.
+@router.get("")
+def health() -> dict:
     return {"status": "ok"}

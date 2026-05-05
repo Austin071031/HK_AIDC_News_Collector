@@ -16,7 +16,9 @@ TOPIC_KEYWORDS = {
     "数据中心", "人工智能", "算力", "芯片", "服务器"
 }
 
-def is_viable_candidate(normalized_doc: dict[str, str]) -> bool:
+from typing import Dict
+
+def is_viable_candidate(normalized_doc: Dict) -> bool:
     text = normalized_doc.get("raw_text", "")
     url = normalized_doc.get("url", "")
     

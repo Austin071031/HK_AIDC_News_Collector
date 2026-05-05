@@ -9,10 +9,10 @@ def get_settings() -> Settings:
     return Settings()
 
 @router.post("/run-daily", status_code=202)
-async def run_daily(
+def run_daily(
     background_tasks: BackgroundTasks,
     settings: Settings = Depends(get_settings),
-) -> dict[str, str]:
+) -> dict:
     background_tasks.add_task(run_daily_pipeline_task, settings)
     return {"status": "accepted"}
 
