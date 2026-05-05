@@ -1,4 +1,5 @@
 import logging
+import datetime
 from hk_aidc_news.config import Settings
 from hk_aidc_news.db import session_factory
 from hk_aidc_news.clustering.service import run_daily_clustering
@@ -17,12 +18,24 @@ async def run_daily_pipeline_task(settings: Settings) -> None:
     
     with session_factory() as db_session:
         try:
-            # Query active sources
-            active_sources = db_session.query(Source).filter(Source.active == True).all()
+            # Query active sources and order by priority (1 is highest)
+            active_sources = (
+                db_session.query(Source)
+                .filter(Source.active == True)
+                .order_by(Source.priority.asc())
+                .all()
+            )
+            
+            day_of_year = datetime.datetime.now().timetuple().tm_yday
             
             # Setup RSS Collector
             rss_feeds = {}
             for source in active_sources:
+                # Use priority to influence frequency: priority 1 runs every day, priority 2 every other day, etc.
+                if day_of_year % max(1, source.priority) != 0:
+                    logger.info(f"Skipping source {source.name} due to priority {source.priority} on day {day_of_year}")
+                    continue
+                
                 if source.discovery_mode == "rss":
                     # Simple heuristic for RSS URL if not explicitly defined
                     rss_url = source.base_url if source.base_url.endswith(".xml") else f"{source.base_url.rstrip('/')}/rss"
