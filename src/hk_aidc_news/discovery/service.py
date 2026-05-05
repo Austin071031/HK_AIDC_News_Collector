@@ -30,7 +30,14 @@ class DiscoveryService:
         merged: List[DiscoveryCandidate] = []
 
         for collector in self.collectors:
-            for item in await collector.collect():
+            try:
+                items = await collector.collect()
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).error(f"Collector {collector.__class__.__name__} failed: {e}")
+                continue
+
+            for item in items:
                 canonical_url = canonicalize_url(item.url)
                 if canonical_url in seen:
                     continue

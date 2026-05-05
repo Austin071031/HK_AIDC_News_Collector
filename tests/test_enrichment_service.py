@@ -1,8 +1,21 @@
 import pytest
 
-from hk_aidc_news.enrichment.service import EnrichmentService
+from hk_aidc_news.enrichment.service import EnrichmentService, normalize_tags
 from hk_aidc_news.llm.schemas import EnrichmentResult
 
+def test_normalize_tags() -> None:
+    tags = ["AI", "人工智能", "Machine Learning", "gpu", "Unknown Tag"]
+    normalized = normalize_tags(tags)
+    
+    assert "Artificial Intelligence" in normalized
+    assert "Machine Learning" in normalized
+    assert "GPUs" in normalized
+    assert "Unknown Tag" in normalized
+    # "AI" and "人工智能" should be merged into "Artificial Intelligence"
+    assert "AI" not in normalized
+    assert "人工智能" not in normalized
+    assert "gpu" not in normalized
+    assert len(normalized) == 4
 
 class FakeLlmClient:
     async def enrich(self, title: str, body: str, language: str) -> EnrichmentResult:

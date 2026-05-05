@@ -48,26 +48,26 @@ def run_daily_ingestion(
     if db_session:
         for doc in viable:
             try:
-                existing = db_session.query(RawDocument).filter_by(canonical_url=doc["canonical_url"]).first()
-                if not existing:
-                    rd = RawDocument(
-                        url=doc["url"],
-                        canonical_url=doc["canonical_url"],
-                        title=doc["title"],
-                        source_name=doc["source_name"],
-                        discovered_via=doc["discovered_via"],
-                        raw_html=doc["raw_html"],
-                        raw_text=doc["raw_text"],
-                        crawled_at=doc["crawled_at"],
-                    )
-                    db_session.add(rd)
-                    db_session.flush()
-                    doc["id"] = rd.id
-                else:
-                    doc["id"] = existing.id
+                with db_session.begin_nested():
+                    existing = db_session.query(RawDocument).filter_by(canonical_url=doc["canonical_url"]).first()
+                    if not existing:
+                        rd = RawDocument(
+                            url=doc["url"],
+                            canonical_url=doc["canonical_url"],
+                            title=doc["title"],
+                            source_name=doc["source_name"],
+                            discovered_via=doc["discovered_via"],
+                            raw_html=doc["raw_html"],
+                            raw_text=doc["raw_text"],
+                            crawled_at=doc["crawled_at"],
+                        )
+                        db_session.add(rd)
+                        db_session.flush()
+                        doc["id"] = rd.id
+                    else:
+                        doc["id"] = existing.id
                 final_docs.append(doc)
             except Exception:
-                db_session.rollback()
                 continue
     else:
         final_docs = viable
