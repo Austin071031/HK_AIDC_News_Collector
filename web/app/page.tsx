@@ -4,6 +4,10 @@ import { formatClusterDate } from "../lib/format";
 type SearchParams = {
   region?: string;
   relevance?: string;
+  start_date?: string;
+  end_date?: string;
+  topic_tag?: string;
+  analyst_status?: string;
 };
 
 export default async function HomePage({
@@ -79,7 +83,7 @@ export default async function HomePage({
             }}
           >
             <h2 style={{ margin: 0, fontSize: "24px" }}>Latest Clusters</h2>
-            <form method="get" style={{ display: "flex", gap: "12px" }}>
+            <form method="get" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "flex-end", maxWidth: "600px" }}>
               <select 
                 name="region" 
                 defaultValue={resolvedParams.region || ""}
@@ -97,8 +101,37 @@ export default async function HomePage({
               >
                 <option value="">All Relevance</option>
                 <option value="direct">Direct</option>
-                <option value="indirect">Indirect</option>
+                <option value="adjacent">Adjacent</option>
               </select>
+              <select 
+                name="analyst_status" 
+                defaultValue={resolvedParams.analyst_status || ""}
+                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
+              >
+                <option value="">All Status</option>
+                <option value="unread">Unread</option>
+                <option value="favorite">Favorite</option>
+                <option value="hidden">Hidden</option>
+              </select>
+              <input
+                type="text"
+                name="topic_tag"
+                placeholder="Filter by Topic..."
+                defaultValue={resolvedParams.topic_tag || ""}
+                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee", width: "140px" }}
+              />
+              <input
+                type="date"
+                name="start_date"
+                defaultValue={resolvedParams.start_date || ""}
+                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
+              />
+              <input
+                type="date"
+                name="end_date"
+                defaultValue={resolvedParams.end_date || ""}
+                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
+              />
               <button 
                 type="submit"
                 style={{ padding: "6px 16px", borderRadius: "6px", background: "#0f3d5d", color: "#fff", border: "none", cursor: "pointer" }}
@@ -169,6 +202,24 @@ export default async function HomePage({
                   <span style={{ color: "#607586", fontSize: "13px" }}>
                     • {cluster.source_count || 0} source{(cluster.source_count || 0) !== 1 ? 's' : ''}
                   </span>
+
+                  {cluster.extracted_entities && cluster.extracted_entities.length > 0 && (
+                    <div style={{ display: "flex", gap: "6px", marginLeft: "12px", alignItems: "center" }}>
+                      <span style={{ fontSize: "11px", color: "#8da2b3", textTransform: "uppercase" }}>Entities:</span>
+                      {cluster.extracted_entities.map(entity => (
+                        <span key={entity} style={{ 
+                          fontSize: "11px", 
+                          padding: "2px 8px", 
+                          background: "#f0f5f9",
+                          color: "#4e6475", 
+                          borderRadius: "4px",
+                          fontWeight: 500
+                        }}>
+                          {entity}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   {cluster.topic_tags && cluster.topic_tags.length > 0 && (
                     <div style={{ display: "flex", gap: "6px", marginLeft: "auto" }}>

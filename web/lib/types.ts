@@ -5,6 +5,7 @@ export type ClusterListItem = {
   publish_date?: string;
   region?: string;
   topic_tags?: string[];
+  extracted_entities?: string[];
   source_count?: number;
 };
 
