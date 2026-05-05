@@ -1,8 +1,18 @@
 import { getClusters } from "../lib/api";
 import { formatClusterDate } from "../lib/format";
 
-export default async function HomePage() {
-  const data = await getClusters();
+type SearchParams = {
+  region?: string;
+  relevance?: string;
+};
+
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const resolvedParams = await searchParams;
+  const data = await getClusters(resolvedParams);
 
   return (
     <main
@@ -69,9 +79,33 @@ export default async function HomePage() {
             }}
           >
             <h2 style={{ margin: 0, fontSize: "24px" }}>Latest Clusters</h2>
-            <span style={{ color: "#4e6475", fontSize: "14px" }}>
-              {data.items.length} items
-            </span>
+            <form method="get" style={{ display: "flex", gap: "12px" }}>
+              <select 
+                name="region" 
+                defaultValue={resolvedParams.region || ""}
+                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
+              >
+                <option value="">All Regions</option>
+                <option value="hong_kong">Hong Kong</option>
+                <option value="mainland_china">Mainland China</option>
+                <option value="southeast_asia">Southeast Asia</option>
+              </select>
+              <select 
+                name="relevance" 
+                defaultValue={resolvedParams.relevance || ""}
+                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
+              >
+                <option value="">All Relevance</option>
+                <option value="direct">Direct</option>
+                <option value="indirect">Indirect</option>
+              </select>
+              <button 
+                type="submit"
+                style={{ padding: "6px 16px", borderRadius: "6px", background: "#0f3d5d", color: "#fff", border: "none", cursor: "pointer" }}
+              >
+                Filter
+              </button>
+            </form>
           </div>
 
           <ul
@@ -93,22 +127,73 @@ export default async function HomePage() {
                   background: "#f8fbfd",
                 }}
               >
-                <a
-                  href={`/clusters/${cluster.cluster_id}`}
-                  style={{
-                    color: "#0f3d5d",
-                    fontSize: "18px",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                  }}
-                >
-                  {cluster.headline}
-                </a>
-                <p style={{ margin: "10px 0 0", color: "#607586" }}>
-                  {formatClusterDate(cluster.publish_date ?? "")}
-                </p>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                  <a
+                    href={`/clusters/${cluster.cluster_id}`}
+                    style={{
+                      color: "#0f3d5d",
+                      fontSize: "18px",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      display: "block",
+                      flex: 1,
+                    }}
+                  >
+                    {cluster.headline}
+                  </a>
+                  {cluster.region && (
+                    <span style={{ 
+                      fontSize: "12px", 
+                      padding: "4px 8px", 
+                      background: "#e5f0f9", 
+                      color: "#0f3d5d", 
+                      borderRadius: "12px",
+                      marginLeft: "12px"
+                    }}>
+                      {cluster.region}
+                    </span>
+                  )}
+                </div>
+                
+                {cluster.summary && (
+                  <p style={{ margin: "8px 0", color: "#4e6475", fontSize: "14px", lineHeight: 1.5 }}>
+                    {cluster.summary}
+                  </p>
+                )}
+
+                <div style={{ display: "flex", gap: "16px", marginTop: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                  <span style={{ color: "#607586", fontSize: "13px" }}>
+                    {formatClusterDate(cluster.publish_date ?? "")}
+                  </span>
+                  
+                  <span style={{ color: "#607586", fontSize: "13px" }}>
+                    • {cluster.source_count || 0} source{(cluster.source_count || 0) !== 1 ? 's' : ''}
+                  </span>
+
+                  {cluster.topic_tags && cluster.topic_tags.length > 0 && (
+                    <div style={{ display: "flex", gap: "6px", marginLeft: "auto" }}>
+                      {cluster.topic_tags.map(tag => (
+                        <span key={tag} style={{ 
+                          fontSize: "11px", 
+                          padding: "2px 8px", 
+                          border: "1px solid #d8e4ee",
+                          color: "#607586", 
+                          borderRadius: "4px"
+                        }}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </li>
             ))}
+            
+            {data.items.length === 0 && (
+              <div style={{ padding: "40px", textAlign: "center", color: "#607586" }}>
+                No clusters found for the selected filters.
+              </div>
+            )}
           </ul>
         </section>
       </div>
