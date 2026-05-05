@@ -18,5 +18,5 @@ class ClusterItem(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     cluster_id: Mapped[int] = mapped_column(ForeignKey("clusters.id"))
-    raw_document_id: Mapped[Optional[int]] = mapped_column(ForeignKey("raw_documents.id"))
+    article_id: Mapped[Optional[int]] = mapped_column(ForeignKey("articles.id"))
     reason: Mapped[str] = mapped_column(String(255), default="")

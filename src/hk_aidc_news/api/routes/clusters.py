@@ -32,10 +32,12 @@ def list_clusters(
     
     if needs_join:
         stmt = stmt.join(ClusterItem, Cluster.id == ClusterItem.cluster_id)
-        stmt = stmt.join(RawDocument, ClusterItem.raw_document_id == RawDocument.id)
+        from hk_aidc_news.models.article import Article
+        stmt = stmt.join(Article, ClusterItem.article_id == Article.id)
+        stmt = stmt.join(RawDocument, Article.raw_document_id == RawDocument.id)
         
         if relevance or topic_tag:
-            stmt = stmt.join(EnrichmentRecord, EnrichmentRecord.raw_document_id == RawDocument.id)
+            stmt = stmt.join(EnrichmentRecord, EnrichmentRecord.article_id == Article.id)
             if relevance:
                 stmt = stmt.where(EnrichmentRecord.relevance == relevance)
             # Filter by topic tag
@@ -90,8 +92,10 @@ def list_clusters(
         region_str = ""
         
         if first_item:
-            enrichment = db.scalars(select(EnrichmentRecord).where(EnrichmentRecord.raw_document_id == first_item.raw_document_id)).first()
-            raw_doc = db.scalars(select(RawDocument).where(RawDocument.id == first_item.raw_document_id)).first()
+            from hk_aidc_news.models.article import Article
+            enrichment = db.scalars(select(EnrichmentRecord).where(EnrichmentRecord.article_id == first_item.article_id)).first()
+            article = db.scalars(select(Article).where(Article.id == first_item.article_id)).first()
+            raw_doc = db.scalars(select(RawDocument).where(RawDocument.id == article.raw_document_id)).first() if article else None
             if enrichment:
                 summary = enrichment.summary
                 topic_tags = enrichment.tags
@@ -128,14 +132,19 @@ def get_cluster(cluster_id: int, db: Session = Depends(get_session)) -> dict:
     articles = []
     
     for item in items_in_db:
-        if not item.raw_document_id:
+        if not item.article_id:
             continue
             
-        raw_doc = db.get(RawDocument, item.raw_document_id)
+        from hk_aidc_news.models.article import Article
+        article = db.get(Article, item.article_id)
+        if not article:
+            continue
+            
+        raw_doc = db.get(RawDocument, article.raw_document_id)
         if not raw_doc:
             continue
             
-        enrichment = db.scalars(select(EnrichmentRecord).where(EnrichmentRecord.raw_document_id == raw_doc.id)).first()
+        enrichment = db.scalars(select(EnrichmentRecord).where(EnrichmentRecord.article_id == article.id)).first()
         
         # Grab rationale and entities from the first item that has them
         if enrichment and not rationale:

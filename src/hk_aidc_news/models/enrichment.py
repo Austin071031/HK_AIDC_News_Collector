@@ -9,7 +9,7 @@ class EnrichmentRecord(Base):
     __tablename__ = "enrichment_results"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    raw_document_id: Mapped[Optional[int]] = mapped_column(ForeignKey("raw_documents.id"))
+    article_id: Mapped[Optional[int]] = mapped_column(ForeignKey("articles.id"))
     relevance: Mapped[str] = mapped_column(String(32))
     confidence: Mapped[float] = mapped_column(Float)
     rationale: Mapped[str] = mapped_column(Text)

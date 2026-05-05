@@ -7,6 +7,9 @@ from hk_aidc_news.discovery.schemas import DiscoveryCandidate
 from hk_aidc_news.ingestion.extractor import extract_text
 from hk_aidc_news.ingestion.prefilter import is_viable_candidate
 from hk_aidc_news.models.raw_document import RawDocument
+from hk_aidc_news.models.article import Article
+from hk_aidc_news.models.source import Source
+from dateutil import parser
 
 
 def normalize_candidate(
@@ -64,10 +67,50 @@ def run_daily_ingestion(
                         db_session.add(rd)
                         db_session.flush()
                         doc["id"] = rd.id
+                        
+                        # Create corresponding Article
+                        source = db_session.query(Source).filter_by(name=doc["source_name"]).first()
+                        source_id = source.id if source else None
+                        
+                        try:
+                            published_at = parser.parse(doc["crawled_at"])
+                        except Exception:
+                            published_at = datetime.now(timezone.utc)
+                            
+                        article = Article(
+                            raw_document_id=rd.id,
+                            title=doc["title"],
+                            url=doc["url"],
+                            source_id=source_id,
+                            published_at=published_at
+                        )
+                        db_session.add(article)
+                        db_session.flush()
+                        doc["article_id"] = article.id
                     else:
                         doc["id"] = existing.id
+                        article = db_session.query(Article).filter_by(raw_document_id=existing.id).first()
+                        if article:
+                            doc["article_id"] = article.id
+                        else:
+                            # Fallback if article doesn't exist for some reason
+                            source = db_session.query(Source).filter_by(name=doc["source_name"]).first()
+                            try:
+                                published_at = parser.parse(doc["crawled_at"])
+                            except Exception:
+                                published_at = datetime.now(timezone.utc)
+                            article = Article(
+                                raw_document_id=existing.id,
+                                title=doc["title"],
+                                url=doc["url"],
+                                source_id=source.id if source else None,
+                                published_at=published_at
+                            )
+                            db_session.add(article)
+                            db_session.flush()
+                            doc["article_id"] = article.id
                 final_docs.append(doc)
-            except Exception:
+            except Exception as e:
                 continue
     else:
         final_docs = viable

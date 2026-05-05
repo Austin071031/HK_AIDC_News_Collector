@@ -1,6 +1,7 @@
 import pytest
 
 from hk_aidc_news.models.raw_document import RawDocument
+from hk_aidc_news.models.article import Article
 from hk_aidc_news.models.enrichment import EnrichmentRecord
 from hk_aidc_news.models.cluster import Cluster
 
@@ -42,5 +43,6 @@ def test_daily_job_persists_records(client, db_session, db_session_factory, monk
     
     # Verify records were added to the DB
     assert db_session.query(RawDocument).count() > 0
+    assert db_session.query(Article).count() > 0
     assert db_session.query(EnrichmentRecord).count() > 0
     assert db_session.query(Cluster).count() > 0

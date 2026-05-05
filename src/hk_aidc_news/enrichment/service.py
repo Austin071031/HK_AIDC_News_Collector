@@ -124,7 +124,7 @@ async def run_daily_enrichment(
             if db_session:
                 with db_session.begin_nested():
                     record = EnrichmentRecord(
-                        raw_document_id=doc.get("id"),
+                        article_id=doc.get("article_id"),
                         relevance=result.relevance,
                         confidence=result.confidence,
                         rationale=result.rationale,
