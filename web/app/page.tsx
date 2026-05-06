@@ -21,7 +21,7 @@ export default async function HomePage({
   return (
     <main
       style={{
-        minHeight: "100vh",
+        minHeight: "100%",
         padding: "48px 24px",
         background:
           "linear-gradient(180deg, #06131d 0%, #0d2131 55%, #f3f7fb 55%, #f3f7fb 100%)",
