@@ -5,6 +5,7 @@ import pytest
 
 from hk_aidc_news.worker import run_daily_pipeline_task
 from hk_aidc_news.models.source import Source
+from hk_aidc_news.models.search_keyword import SearchKeyword
 from hk_aidc_news.config import Settings
 
 @pytest.fixture
@@ -21,13 +22,20 @@ async def test_worker_respects_priority_for_frequency(mock_db_session):
     s2 = Source(name="med_priority", base_url="http://med.com", discovery_mode="rss", priority=2, active=True)
     s3 = Source(name="low_priority", base_url="http://low.com", discovery_mode="rss", priority=3, active=True)
     
-    mock_query = mock_db_session.query.return_value
-    mock_filter = mock_query.filter.return_value
-    mock_order = mock_filter.order_by.return_value
-    # worker might just use filter(...).all() if it wasn't ordering, but we will mock both
-    # so we mock .all() on mock_filter too just in case.
-    mock_filter.all.return_value = [s1, s2, s3]
-    mock_order.all.return_value = [s1, s2, s3]
+    k1 = SearchKeyword(keyword="Hong Kong AI", active=True)
+
+    # We need to mock different return values for different calls to filter().all()
+    # The first call is for sources, the second is for keywords
+    def mock_query_side_effect(model):
+        mock_q = MagicMock()
+        if model == Source:
+            mock_q.filter.return_value.order_by.return_value.all.return_value = [s1, s2, s3]
+            mock_q.filter.return_value.all.return_value = [s1, s2, s3]
+        elif model == SearchKeyword:
+            mock_q.filter.return_value.all.return_value = [k1]
+        return mock_q
+
+    mock_db_session.query.side_effect = mock_query_side_effect
 
     settings = Settings(firecrawl_api_key="test", openai_api_key="test")
     
@@ -39,7 +47,7 @@ async def test_worker_respects_priority_for_frequency(mock_db_session):
         mock_datetime.datetime.now.return_value = mock_date
         
         with patch("hk_aidc_news.worker.RssCollector") as mock_rss_collector, \
-             patch("hk_aidc_news.worker.FirecrawlCollector"), \
+             patch("hk_aidc_news.worker.FirecrawlCollector") as mock_firecrawl, \
              patch("hk_aidc_news.worker.OpenAiCompatibleLlmClient"), \
              patch("hk_aidc_news.worker.EnrichmentService"), \
              patch("hk_aidc_news.worker.run_daily_discovery", return_value=[]), \
@@ -57,3 +65,8 @@ async def test_worker_respects_priority_for_frequency(mock_db_session):
             assert "high_priority" in feeds
             assert "med_priority" in feeds
             assert "low_priority" not in feeds
+            
+            # Ensure keywords were fetched properly
+            mock_firecrawl.assert_called_once()
+            args, kwargs = mock_firecrawl.call_args
+            assert kwargs.get("queries") == ["Hong Kong AI"]
