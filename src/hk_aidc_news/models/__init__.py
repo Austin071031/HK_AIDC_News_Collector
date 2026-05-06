@@ -6,6 +6,7 @@ from hk_aidc_news.models.discovery_job import DiscoveryJob
 from hk_aidc_news.models.enrichment import EnrichmentRecord
 from hk_aidc_news.models.raw_document import RawDocument
 from hk_aidc_news.models.source import Source
+from hk_aidc_news.models.search_keyword import SearchKeyword
 
 __all__ = [
     "AnalystAction",
@@ -17,4 +18,5 @@ __all__ = [
     "EnrichmentRecord",
     "RawDocument",
     "Source",
+    "SearchKeyword",
 ]
