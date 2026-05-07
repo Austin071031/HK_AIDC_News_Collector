@@ -19,6 +19,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
             <Link href="/pipeline" style={{ color: "#d6e7f5", textDecoration: "none", fontSize: "16px", padding: "8px 12px", borderRadius: "8px", display: "block" }}>
               Pipeline Manager
             </Link>
+            <Link href="/settings" style={{ color: "#d6e7f5", textDecoration: "none", fontSize: "16px", padding: "8px 12px", borderRadius: "8px", display: "block" }}>
+              Settings
+            </Link>
           </nav>
         </aside>
         

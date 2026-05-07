@@ -1,5 +1,5 @@
 import { getClusters } from "../lib/api";
-import { formatClusterDate } from "../lib/format";
+import SplitViewDashboard from "./SplitViewDashboard";
 
 type SearchParams = {
   region?: string;
@@ -30,7 +30,7 @@ export default async function HomePage({
     >
       <div
         style={{
-          maxWidth: "960px",
+          maxWidth: "1200px",
           margin: "0 auto",
           display: "grid",
           gap: "24px",
@@ -141,111 +141,7 @@ export default async function HomePage({
             </form>
           </div>
 
-          <ul
-            style={{
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-              display: "grid",
-              gap: "16px",
-            }}
-          >
-            {data.items.map((cluster) => (
-              <li
-                key={cluster.cluster_id}
-                style={{
-                  padding: "18px 20px",
-                  borderRadius: "18px",
-                  border: "1px solid #d8e4ee",
-                  background: "#f8fbfd",
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-                  <a
-                    href={`/clusters/${cluster.cluster_id}`}
-                    style={{
-                      color: "#0f3d5d",
-                      fontSize: "18px",
-                      fontWeight: 600,
-                      textDecoration: "none",
-                      display: "block",
-                      flex: 1,
-                    }}
-                  >
-                    {cluster.headline}
-                  </a>
-                  {cluster.region && (
-                    <span style={{ 
-                      fontSize: "12px", 
-                      padding: "4px 8px", 
-                      background: "#e5f0f9", 
-                      color: "#0f3d5d", 
-                      borderRadius: "12px",
-                      marginLeft: "12px"
-                    }}>
-                      {cluster.region}
-                    </span>
-                  )}
-                </div>
-                
-                {cluster.summary && (
-                  <p style={{ margin: "8px 0", color: "#4e6475", fontSize: "14px", lineHeight: 1.5 }}>
-                    {cluster.summary}
-                  </p>
-                )}
-
-                <div style={{ display: "flex", gap: "16px", marginTop: "12px", alignItems: "center", flexWrap: "wrap" }}>
-                  <span style={{ color: "#607586", fontSize: "13px" }}>
-                    {formatClusterDate(cluster.publish_date ?? "")}
-                  </span>
-                  
-                  <span style={{ color: "#607586", fontSize: "13px" }}>
-                    • {cluster.source_count || 0} source{(cluster.source_count || 0) !== 1 ? 's' : ''}
-                  </span>
-
-                  {cluster.extracted_entities && cluster.extracted_entities.length > 0 && (
-                    <div style={{ display: "flex", gap: "6px", marginLeft: "12px", alignItems: "center" }}>
-                      <span style={{ fontSize: "11px", color: "#8da2b3", textTransform: "uppercase" }}>Entities:</span>
-                      {cluster.extracted_entities.map(entity => (
-                        <span key={entity} style={{ 
-                          fontSize: "11px", 
-                          padding: "2px 8px", 
-                          background: "#f0f5f9",
-                          color: "#4e6475", 
-                          borderRadius: "4px",
-                          fontWeight: 500
-                        }}>
-                          {entity}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {cluster.topic_tags && cluster.topic_tags.length > 0 && (
-                    <div style={{ display: "flex", gap: "6px", marginLeft: "auto" }}>
-                      {cluster.topic_tags.map(tag => (
-                        <span key={tag} style={{ 
-                          fontSize: "11px", 
-                          padding: "2px 8px", 
-                          border: "1px solid #d8e4ee",
-                          color: "#607586", 
-                          borderRadius: "4px"
-                        }}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
-            
-            {data.items.length === 0 && (
-              <div style={{ padding: "40px", textAlign: "center", color: "#607586" }}>
-                No clusters found for the selected filters.
-              </div>
-            )}
-          </ul>
+          <SplitViewDashboard initialClusters={data.items} />
         </section>
       </div>
     </main>

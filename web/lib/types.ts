@@ -36,3 +36,22 @@ export type ActionPayload = {
   notes: string | null;
   tags: string[] | null;
 };
+
+export interface Source {
+  id: number;
+  name: string;
+  base_url: string;
+  rss_url?: string | null;
+  region: string;
+  language: string;
+  source_type: string;
+  discovery_mode: string;
+  priority: number;
+  active: boolean;
+}
+
+export interface Keyword {
+  id: number;
+  keyword: string;
+  active: boolean;
+}
