@@ -7,6 +7,8 @@ from typing import List, Optional
 from hk_aidc_news.db import get_session
 from hk_aidc_news.models.source import Source
 from hk_aidc_news.models.article import Article
+from hk_aidc_news.models.enrichment import EnrichmentRecord
+from hk_aidc_news.models.analyst_action import AnalystAction
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
 
@@ -66,6 +68,52 @@ def update_source(source_id: int, item: SourceBase, db: Session = Depends(get_se
     db.commit()
     db.refresh(db_item)
     return db_item
+
+@router.get("/{source_id}/articles")
+def get_source_articles(
+    source_id: int,
+    db: Session = Depends(get_session)
+):
+    source = db.query(Source).filter(Source.id == source_id).first()
+    if not source:
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    stmt = (
+        select(Article, EnrichmentRecord, AnalystAction)
+        .outerjoin(EnrichmentRecord, Article.id == EnrichmentRecord.article_id)
+        .outerjoin(AnalystAction, Article.id == AnalystAction.article_id)
+        .where(Article.source_id == source_id)
+        .order_by(Article.published_at.desc().nullslast())
+    )
+    
+    results = db.execute(stmt).all()
+    
+    articles = []
+    for article, enrichment, action in results:
+        article_dict = {c.name: getattr(article, c.name) for c in article.__table__.columns}
+        
+        if enrichment:
+            article_dict["enrichment"] = {
+                "summary": enrichment.summary,
+                "relevance": enrichment.relevance,
+                "tags": enrichment.tags
+            }
+        else:
+            article_dict["enrichment"] = None
+            
+        if action:
+            article_dict["action"] = {
+                "is_hidden": action.is_hidden,
+                "is_favorite": action.is_favorite,
+                "notes": action.notes,
+                "tags": action.tags
+            }
+        else:
+            article_dict["action"] = None
+            
+        articles.append(article_dict)
+        
+    return articles
 
 @router.delete("/{source_id}")
 def delete_source(source_id: int, db: Session = Depends(get_session)):
