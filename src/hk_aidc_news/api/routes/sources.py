@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import select, func
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 from hk_aidc_news.db import get_session
 from hk_aidc_news.models.source import Source
+from hk_aidc_news.models.article import Article
 
 router = APIRouter(prefix="/api/sources", tags=["sources"])
 
@@ -21,10 +23,29 @@ class SourceBase(BaseModel):
 
 class SourceResponse(SourceBase):
     id: int
+    article_count: Optional[int] = None
     model_config = ConfigDict(from_attributes=True)
 
 @router.get("", response_model=List[SourceResponse])
-def get_sources(db: Session = Depends(get_session)):
+def get_sources(
+    with_counts: bool = Query(False),
+    db: Session = Depends(get_session)
+):
+    if with_counts:
+        stmt = (
+            select(Source, func.count(Article.id).label("article_count"))
+            .outerjoin(Article, Source.id == Article.source_id)
+            .group_by(Source.id)
+        )
+        results = db.execute(stmt).all()
+        
+        sources = []
+        for source, count in results:
+            source_dict = {c.name: getattr(source, c.name) for c in source.__table__.columns}
+            source_dict["article_count"] = count
+            sources.append(source_dict)
+        return sources
+
     return db.query(Source).all()
 
 @router.post("", response_model=SourceResponse)
