@@ -11,7 +11,7 @@ def get_settings() -> Settings:
     return Settings()
 
 @router.post("/run-daily", status_code=202)
-def run_daily(
+async def run_daily(
     background_tasks: BackgroundTasks,
     settings: Settings = Depends(get_settings),
 ) -> dict:

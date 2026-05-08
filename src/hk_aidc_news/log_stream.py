@@ -10,6 +10,7 @@ class QueueLogHandler(logging.Handler):
     def emit(self, record):
         global log_queue
         if log_queue is None:
+            print("log_queue is None!")
             return
             
         msg = self.format(record)
@@ -19,12 +20,14 @@ class QueueLogHandler(logging.Handler):
             # Try to get the running loop
             loop = asyncio.get_running_loop()
             log_queue.put_nowait(msg)
-        except RuntimeError:
+            print(f"Enqueued: {msg}")
+        except RuntimeError as e:
             # If we are not in an event loop (e.g. running in a thread pool),
             # we need to schedule it in the loop that owns the queue.
             # However, asyncio.Queue is not thread-safe.
             # For simplicity in this app, we'll assume the worker and SSE are in the same loop
             # or we just ignore logs that come from outside the loop.
+            print(f"RuntimeError in emit: {e}")
             pass
 
 def setup_log_stream():
@@ -43,6 +46,7 @@ def setup_log_stream():
     
     # Attach to root logger or hk_aidc_news logger
     logger = logging.getLogger("hk_aidc_news")
+    logger.setLevel(logging.INFO)
     if not any(isinstance(h, QueueLogHandler) for h in logger.handlers):
         logger.addHandler(handler)
 
