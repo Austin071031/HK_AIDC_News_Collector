@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from hk_aidc_news.api.routes.actions import router as actions_router
+from hk_aidc_news.api.routes.articles import router as articles_router
 from hk_aidc_news.api.routes.clusters import router as cluster_router
 from hk_aidc_news.api.routes.health import router as health_router
 from hk_aidc_news.api.routes.jobs import router as jobs_router
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(cluster_router)
     app.include_router(actions_router)
+    app.include_router(articles_router)
     app.include_router(jobs_router)
     app.include_router(keywords_router)
     app.include_router(sources_router)
