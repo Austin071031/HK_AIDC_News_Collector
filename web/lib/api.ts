@@ -1,4 +1,4 @@
-import type { ClusterListResponse, ClusterDetailResponse, ActionPayload, Source, Keyword } from "./types";
+import type { ClusterListResponse, ClusterDetailResponse, ActionPayload, Source, Keyword, SourceWithCount, SourceArticle } from "./types";
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -53,8 +53,21 @@ export async function submitClusterAction(clusterId: string, payload: ActionPayl
   return response.json();
 }
 
-export async function getSources(): Promise<Source[]> {
-  const response = await fetch(`${API_BASE_URL}/api/sources`, { cache: "no-store" });
+export async function getSources(
+  searchParams?: { [key: string]: string | string[] | undefined }
+): Promise<SourceWithCount[]> {
+  const url = new URL(`${API_BASE_URL}/api/sources`);
+  url.searchParams.append("with_counts", "true");
+  
+  if (searchParams) {
+    Object.entries(searchParams).forEach(([key, value]) => {
+      if (value) {
+        url.searchParams.append(key, String(value));
+      }
+    });
+  }
+  
+  const response = await fetch(url.toString(), { cache: "no-store" });
   if (!response.ok) throw new Error("Failed to fetch sources");
   return response.json();
 }
@@ -93,4 +106,22 @@ export async function createKeyword(payload: Omit<Keyword, "id">): Promise<Keywo
 export async function deleteKeyword(id: number): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/keywords/${id}`, { method: "DELETE" });
   if (!response.ok) throw new Error("Failed to delete keyword");
+}
+
+export async function getSourceArticles(sourceId: string): Promise<SourceArticle[]> {
+  const response = await fetch(`${API_BASE_URL}/api/sources/${sourceId}/articles`, {
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error("Failed to fetch source articles");
+  return response.json();
+}
+
+export async function submitArticleAction(articleId: string, payload: ActionPayload) {
+  const response = await fetch(`${API_BASE_URL}/api/articles/${articleId}/actions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Failed to submit action");
+  return response.json();
 }

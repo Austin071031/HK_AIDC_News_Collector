@@ -55,3 +55,29 @@ export interface Keyword {
   keyword: string;
   active: boolean;
 }
+
+export interface ArticleEnrichment {
+  summary: string;
+  relevance: string;
+  tags: string[];
+}
+
+export interface ArticleAction {
+  is_hidden: boolean;
+  is_favorite: boolean;
+  notes: string | null;
+  tags: string | null;
+}
+
+export interface SourceArticle {
+  id: number;
+  title: string;
+  url: string;
+  published_at: string | null;
+  enrichment: ArticleEnrichment | null;
+  action: ArticleAction | null;
+}
+
+export interface SourceWithCount extends Source {
+  article_count?: number;
+}
