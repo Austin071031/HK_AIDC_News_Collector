@@ -1,4 +1,4 @@
-import { getClusters } from "../lib/api";
+import { getSources } from "../lib/api";
 import SplitViewDashboard from "./SplitViewDashboard";
 
 type SearchParams = {
@@ -16,7 +16,7 @@ export default async function HomePage({
   searchParams: Promise<SearchParams>;
 }) {
   const resolvedParams = await searchParams;
-  const data = await getClusters(resolvedParams);
+  const sources = await getSources(resolvedParams);
 
   return (
     <main
@@ -55,13 +55,13 @@ export default async function HomePage({
               color: "#8fd3ff",
             }}
           >
-            Daily Cluster Feed
+            Source-Centric Feed
           </p>
           <h1 style={{ margin: "12px 0 8px", fontSize: "40px" }}>
             AI Data Center News Monitor
           </h1>
           <p style={{ margin: 0, maxWidth: "60ch", color: "#d6e7f5" }}>
-            Read the current cluster-first market feed for AI data center,
+            Read the current source-first market feed for AI data center,
             telecom, power, and infrastructure developments.
           </p>
         </section>
@@ -82,7 +82,7 @@ export default async function HomePage({
               marginBottom: "20px",
             }}
           >
-            <h2 style={{ margin: 0, fontSize: "24px" }}>Latest Clusters</h2>
+            <h2 style={{ margin: 0, fontSize: "24px" }}>News Sources</h2>
             <form method="get" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "flex-end", maxWidth: "600px" }}>
               <select 
                 name="region" 
@@ -141,7 +141,7 @@ export default async function HomePage({
             </form>
           </div>
 
-          <SplitViewDashboard initialClusters={data.items} />
+          <SplitViewDashboard initialSources={sources} />
         </section>
       </div>
     </main>
