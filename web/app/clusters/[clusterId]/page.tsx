@@ -1,6 +1,5 @@
 import { getClusterDetail } from "../../../lib/api";
 import { formatClusterDate } from "../../../lib/format";
-import AnalystActionPanel from "./AnalystActionPanel";
 
 type ClusterDetailPageProps = {
   params: Promise<{
@@ -105,8 +104,6 @@ export default async function ClusterDetailPage({
             ))}
           </ul>
         </section>
-
-        <AnalystActionPanel clusterId={cluster.id.toString()} />
       </div>
     </main>
   );

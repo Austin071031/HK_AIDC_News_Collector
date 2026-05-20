@@ -1,4 +1,5 @@
-import { getSources } from "../lib/api";
+import { Suspense } from "react";
+import { getArticles } from "../lib/api";
 import SplitViewDashboard from "./SplitViewDashboard";
 
 type SearchParams = {
@@ -16,7 +17,7 @@ export default async function HomePage({
   searchParams: Promise<SearchParams>;
 }) {
   const resolvedParams = await searchParams;
-  const sources = await getSources(resolvedParams);
+  const articles = await getArticles(resolvedParams);
 
   return (
     <main
@@ -30,42 +31,12 @@ export default async function HomePage({
     >
       <div
         style={{
-          maxWidth: "1200px",
+          maxWidth: "1400px",
           margin: "0 auto",
           display: "grid",
           gap: "24px",
         }}
       >
-        <section
-          style={{
-            padding: "32px",
-            borderRadius: "24px",
-            background: "rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(14px)",
-            color: "#f7fbff",
-            boxShadow: "0 24px 80px rgba(0, 0, 0, 0.18)",
-          }}
-        >
-          <p
-            style={{
-              margin: 0,
-              fontSize: "12px",
-              letterSpacing: "0.24em",
-              textTransform: "uppercase",
-              color: "#8fd3ff",
-            }}
-          >
-            Source-Centric Feed
-          </p>
-          <h1 style={{ margin: "12px 0 8px", fontSize: "40px" }}>
-            AI Data Center News Monitor
-          </h1>
-          <p style={{ margin: 0, maxWidth: "60ch", color: "#d6e7f5" }}>
-            Read the current source-first market feed for AI data center,
-            telecom, power, and infrastructure developments.
-          </p>
-        </section>
-
         <section
           style={{
             padding: "24px",
@@ -82,8 +53,8 @@ export default async function HomePage({
               marginBottom: "20px",
             }}
           >
-            <h2 style={{ margin: 0, fontSize: "24px" }}>News Sources</h2>
-            <form method="get" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "flex-end", maxWidth: "600px" }}>
+            <h2 style={{ margin: 0, fontSize: "24px" }}>News Feed</h2>
+            <form method="get" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "flex-end", maxWidth: "800px" }}>
               <select 
                 name="region" 
                 defaultValue={resolvedParams.region || ""}
@@ -141,7 +112,9 @@ export default async function HomePage({
             </form>
           </div>
 
-          <SplitViewDashboard initialSources={sources} />
+          <Suspense fallback={<div style={{ textAlign: "center", padding: "40px" }}>Loading dashboard...</div>}>
+            <SplitViewDashboard initialArticles={articles} />
+          </Suspense>
         </section>
       </div>
     </main>

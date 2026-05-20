@@ -71,11 +71,13 @@ class EnrichmentService:
                 body=body,
                 language=language,
             )
-        except Exception:
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             return EnrichmentResult(
                 relevance="noise",
                 confidence=0.0,
-                rationale="llm_unavailable",
+                rationale=f"llm_unavailable: {e}",
                 tags=[],
                 entities=[],
                 summary="",
@@ -96,7 +98,7 @@ async def run_daily_enrichment(
         try:
             result = await enrichment_service.enrich(
                 title=doc.get("title", ""),
-                body=doc.get("body", ""),
+                body=doc.get("body", doc.get("raw_text", "")),
                 language=doc.get("language", "en")
             )
             
@@ -123,18 +125,29 @@ async def run_daily_enrichment(
             
             if db_session:
                 with db_session.begin_nested():
-                    record = EnrichmentRecord(
-                        article_id=doc.get("article_id"),
-                        relevance=result.relevance,
-                        confidence=result.confidence,
-                        rationale=result.rationale,
-                        tags=result.tags,
-                        entities=result.entities,
-                        summary=result.summary,
-                        semantic_key=result.semantic_key,
-                        model_name=model_name
-                    )
-                    db_session.add(record)
+                    existing = db_session.query(EnrichmentRecord).filter_by(article_id=doc.get("article_id")).first()
+                    if existing:
+                        existing.relevance = result.relevance
+                        existing.confidence = result.confidence
+                        existing.rationale = result.rationale
+                        existing.tags = result.tags
+                        existing.entities = result.entities
+                        existing.summary = result.summary
+                        existing.semantic_key = result.semantic_key
+                        existing.model_name = model_name
+                    else:
+                        record = EnrichmentRecord(
+                            article_id=doc.get("article_id"),
+                            relevance=result.relevance,
+                            confidence=result.confidence,
+                            rationale=result.rationale,
+                            tags=result.tags,
+                            entities=result.entities,
+                            summary=result.summary,
+                            semantic_key=result.semantic_key,
+                            model_name=model_name
+                        )
+                        db_session.add(record)
                     db_session.flush()
         except Exception:
             continue

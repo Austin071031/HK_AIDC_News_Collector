@@ -25,7 +25,7 @@ describe('Config Editor API Wrappers', () => {
 
       const result = await getSources();
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:8000/api/sources',
+        'http://localhost:8000/api/sources?with_counts=true',
         { cache: 'no-store' }
       );
       expect(result).toEqual(mockSources);

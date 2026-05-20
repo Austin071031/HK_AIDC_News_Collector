@@ -55,9 +55,20 @@ async def run_daily_pipeline_task(settings: Settings) -> None:
                 limit=settings.default_query_limit,
             )
             
+            # The user might provide a Deepseek API key instead of OpenAI.
+            # Determine base_url and correct api_key based on configuration.
+            import os
+            
+            # Use deepseek base URL if the model starts with "deepseek"
+            base_url = None
+            api_key = settings.openai_api_key or settings.llm_api_key
+            if settings.llm_model.startswith("deepseek"):
+                base_url = "https://api.deepseek.com/v1"
+            
             llm_client = OpenAiCompatibleLlmClient(
-                api_key=settings.openai_api_key,
+                api_key=api_key,
                 model=settings.llm_model,
+                base_url=base_url
             )
             enrichment_service = EnrichmentService(llm_client)
 
@@ -66,7 +77,7 @@ async def run_daily_pipeline_task(settings: Settings) -> None:
             logger.info(f"Discovered {len(discovered)} items.")
             
             logger.info("Running ingestion...")
-            ingested = run_daily_ingestion(discovered, db_session)
+            ingested = run_daily_ingestion(discovered, db_session, settings=settings)
             logger.info(f"Ingested {len(ingested)} new documents.")
             
             logger.info("Running enrichment...")

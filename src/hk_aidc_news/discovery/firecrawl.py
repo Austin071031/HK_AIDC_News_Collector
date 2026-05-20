@@ -25,7 +25,7 @@ class FirecrawlCollector:
                 response = await client.post(
                     "/v1/search",
                     headers={"Authorization": f"Bearer {self.api_key}"},
-                    json={"query": query, "limit": self.limit, "pageOptions": {"fetchPageContent": False}},
+                    json={"query": query, "limit": self.limit},
                 )
                 response.raise_for_status()
                 data = response.json()

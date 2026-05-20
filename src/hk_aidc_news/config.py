@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     firecrawl_api_key: str = ""
     firecrawl_base_url: str = "https://api.firecrawl.dev"
     openai_api_key: str = ""
+    llm_api_key: str = ""
     llm_model: str = "gpt-4.1-mini"
     default_query_limit: int = Field(default=25, ge=1, le=100)
 
@@ -31,7 +32,7 @@ class Settings(BaseSettings):
             raise ValueError("database_url must not be blank")
         return stripped_value
 
-    @field_validator("firecrawl_api_key", "openai_api_key")
+    @field_validator("firecrawl_api_key", "openai_api_key", "llm_api_key")
     @classmethod
     def validate_api_keys(cls, value: str) -> str:
         if value == "":

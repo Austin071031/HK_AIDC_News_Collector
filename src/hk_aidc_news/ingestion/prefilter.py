@@ -18,6 +18,8 @@ TOPIC_KEYWORDS = {
 
 from typing import Dict
 
+import re
+
 def is_viable_candidate(normalized_doc: Dict) -> bool:
     text = normalized_doc.get("raw_text", "")
     url = normalized_doc.get("url", "")
@@ -42,7 +44,18 @@ def is_viable_candidate(normalized_doc: Dict) -> bool:
 
     # Keyword topic gates
     text_lower = text.lower()
-    has_keyword = any(keyword in text_lower for keyword in TOPIC_KEYWORDS)
+    
+    # Check for exact word match for short acronyms like 'ai', otherwise substring match
+    has_keyword = False
+    for keyword in TOPIC_KEYWORDS:
+        if keyword == "ai":
+            if re.search(r'\bai\b', text_lower):
+                has_keyword = True
+                break
+        elif keyword in text_lower:
+            has_keyword = True
+            break
+            
     if not has_keyword:
         return False
 

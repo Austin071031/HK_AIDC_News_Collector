@@ -4,9 +4,9 @@ An AI-integrated news collector designed for telecom product teams to monitor AI
 
 ## System Architecture
 
-The application is built on a deterministic ingestion pipeline coupled with LLM enrichment and clustering.
+The application is built on a deterministic ingestion pipeline coupled with LLM enrichment.
 
-- **Frontend (Web Dashboard)**: Built with Next.js and React. Provides a split-view cluster feed, filtering options, analyst review tools (hide, favorite, manual tagging, notes), and a DB-driven visual config editor.
+- **Frontend (Web Dashboard)**: Built with Next.js and React. Provides a source-centric split-view feed, filtering options, analyst review tools (hide, favorite, manual tagging, notes) for individual articles, and a DB-driven visual config editor.
 - **Backend (API & Worker)**: Python-based backend using FastAPI. It exposes REST APIs for the dashboard and runs asynchronous pipeline workers for daily data collection.
 - **Database**: PostgreSQL (or SQLite for local development) using SQLAlchemy ORM.
 
@@ -15,7 +15,7 @@ The application is built on a deterministic ingestion pipeline coupled with LLM 
 2. **Extraction**: Discovered URLs are fetched and normalized into raw documents. Deterministic extraction is preferred, with Firecrawl acting as a fallback for complex pages.
 3. **Prefilter**: Cheap deterministic checks (domain, language, length) are applied to filter out noise before involving the LLM.
 4. **LLM Enrichment**: An OpenAI-compatible LLM (e.g., Deepseek, GPT-4) classifies relevance, extracts entities, tags topics, standardizes terminology across Chinese and English, and generates concise summaries.
-5. **Deduplication & Clustering**: Groups related articles into unified event clusters based on canonical URLs, text similarity, and LLM semantic hints, ensuring the dashboard feed remains low-noise.
+5. **Deduplication & Organization**: Filters out duplicates based on canonical URLs and text similarity, and organizes enriched articles by their respective news sources to ensure the dashboard feed remains low-noise and source-centric.
 
 ## Deployment Method
 
@@ -72,7 +72,7 @@ The project is structured into a Python backend and a Next.js frontend. Follow t
 
 3. **Access the Application**:
    Open [http://localhost:3000](http://localhost:3000) in your browser. The unified UI includes:
-   - **News Feed (`/`)**: View the split-view cluster feed and perform analyst actions.
+   - **News Feed (`/`)**: View the source-centric feed and perform analyst actions on individual articles.
    - **Pipeline Manager (`/pipeline`)**: Trigger the daily discovery/ingestion pipeline and view real-time log streaming.
    - **Settings (`/settings`)**: Visual configuration editor to manage discovery sources and keywords directly in the database.
 

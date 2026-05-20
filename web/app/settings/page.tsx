@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSources, createSource, deleteSource, getKeywords, createKeyword, deleteKeyword } from "../../lib/api";
+import { getSources, createSource, updateSource, deleteSource, getKeywords, createKeyword, deleteKeyword } from "../../lib/api";
 import type { Source, Keyword } from "../../lib/types";
 
 export default function SettingsPage() {
@@ -13,6 +13,10 @@ export default function SettingsPage() {
   const [newSourceUrl, setNewSourceUrl] = useState("");
   const [newSourceMode, setNewSourceMode] = useState("search");
   const [newKeyword, setNewKeyword] = useState("");
+
+  // Edit State
+  const [editingSourceId, setEditingSourceId] = useState<number | null>(null);
+  const [editSourceData, setEditSourceData] = useState<Partial<Source>>({});
 
   const loadData = async () => {
     try {
@@ -45,6 +49,12 @@ export default function SettingsPage() {
     loadData();
   };
 
+  const handleUpdateSource = async (id: number) => {
+    await updateSource(id, editSourceData);
+    setEditingSourceId(null);
+    loadData();
+  };
+
   const handleAddKeyword = async (e: React.FormEvent) => {
     e.preventDefault();
     await createKeyword({ keyword: newKeyword, active: true });
@@ -64,6 +74,7 @@ export default function SettingsPage() {
             <thead>
               <tr style={{ borderBottom: "1px solid #ccc" }}>
                 <th style={{ padding: "8px" }}>Name</th>
+                <th style={{ padding: "8px" }}>Base URL</th>
                 <th style={{ padding: "8px" }}>Mode</th>
                 <th style={{ padding: "8px" }}>Action</th>
               </tr>
@@ -71,10 +82,54 @@ export default function SettingsPage() {
             <tbody>
               {sources.map(s => (
                 <tr key={s.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: "8px" }}>{s.name}</td>
-                  <td style={{ padding: "8px" }}>{s.discovery_mode}</td>
                   <td style={{ padding: "8px" }}>
-                    <button onClick={async () => { await deleteSource(s.id); loadData(); }} style={{ color: "red", cursor: "pointer", background: "none", border: "none" }}>Delete</button>
+                    {editingSourceId === s.id ? (
+                      <input 
+                        value={editSourceData.name || ""} 
+                        onChange={e => setEditSourceData({...editSourceData, name: e.target.value})} 
+                        style={{ padding: "4px", width: "100%" }}
+                      />
+                    ) : (
+                      s.name
+                    )}
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    {editingSourceId === s.id ? (
+                      <input 
+                        value={editSourceData.base_url || ""} 
+                        onChange={e => setEditSourceData({...editSourceData, base_url: e.target.value})} 
+                        style={{ padding: "4px", width: "100%" }}
+                      />
+                    ) : (
+                      s.base_url
+                    )}
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    {editingSourceId === s.id ? (
+                      <select 
+                        value={editSourceData.discovery_mode || "search"} 
+                        onChange={e => setEditSourceData({...editSourceData, discovery_mode: e.target.value})}
+                        style={{ padding: "4px" }}
+                      >
+                        <option value="search">Search</option>
+                        <option value="rss">RSS</option>
+                      </select>
+                    ) : (
+                      s.discovery_mode
+                    )}
+                  </td>
+                  <td style={{ padding: "8px", display: "flex", gap: "8px" }}>
+                    {editingSourceId === s.id ? (
+                      <>
+                        <button onClick={() => handleUpdateSource(s.id)} style={{ color: "green", cursor: "pointer", background: "none", border: "none" }}>Save</button>
+                        <button onClick={() => setEditingSourceId(null)} style={{ color: "gray", cursor: "pointer", background: "none", border: "none" }}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => { setEditingSourceId(s.id); setEditSourceData(s); }} style={{ color: "blue", cursor: "pointer", background: "none", border: "none" }}>Edit</button>
+                        <button onClick={async () => { await deleteSource(s.id); loadData(); }} style={{ color: "red", cursor: "pointer", background: "none", border: "none" }}>Delete</button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -88,7 +143,7 @@ export default function SettingsPage() {
               <option value="search">Search</option>
               <option value="rss">RSS</option>
             </select>
-            <button type="submit" style={{ padding: "8px 16px", background: "#0f3d5d", color: "#fff", border: "none", borderRadius: "4px" }}>Add Source</button>
+            <button type="submit" style={{ padding: "8px 16px", background: "#0f3d5d", color: "#fff", border: "none", borderRadius: "4px", whiteSpace: "nowrap" }}>Add Source</button>
           </form>
         </section>
 

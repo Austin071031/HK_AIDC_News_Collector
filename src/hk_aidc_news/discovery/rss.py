@@ -45,7 +45,10 @@ class RssCollector:
 
     async def collect(self) -> List[DiscoveryCandidate]:
         candidates = []
-        async with httpx.AsyncClient() as client:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        }
+        async with httpx.AsyncClient(headers=headers, follow_redirects=True) as client:
             tasks = [
                 self._fetch_feed(client, source_name, url)
                 for source_name, url in self.feeds.items()

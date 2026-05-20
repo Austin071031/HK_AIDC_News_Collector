@@ -7,5 +7,5 @@ class EnrichmentResult(BaseModel):
     rationale: str
     tags: List[str]
     entities: List[str]
-    summary: str
+    summary: str = Field(description="A concise summary formatted as a bulleted list of key points.")
     semantic_key: str

@@ -209,10 +209,10 @@ git commit -m "feat(api): create endpoint for fetching a source's articles with 
 **Files:**
 - Modify: `src/hk_aidc_news/api/routes/actions.py` (or wherever analyst actions are handled)
 
-- [ ] **Step 1: Check existing implementation**
+- [x] **Step 1: Check existing implementation**
 Verify if `POST /api/clusters/{cluster_id}/actions` needs to be mirrored for articles or if a generic endpoint exists. Based on the spec, we need `POST /api/articles/{article_id}/actions`.
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 ```python
 # tests/api/test_article_actions.py
@@ -228,7 +228,7 @@ def test_create_article_action():
     assert response.status_code in [200, 201]
 ```
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Create/Update `src/hk_aidc_news/api/routes/articles.py` (and register it in `app.py` if new).
 
@@ -284,12 +284,12 @@ def submit_article_action(
 ```
 *Note: Make sure to register this router in `src/hk_aidc_news/app.py` if `articles.py` is new.*
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest tests/api/test_article_actions.py::test_create_article_action -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/hk_aidc_news/api/routes/articles.py tests/api/test_article_actions.py src/hk_aidc_news/app.py
