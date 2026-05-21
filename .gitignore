@@ -13,4 +13,15 @@ web/.next/
 
 .superpowers/
 
+# DB
 app.db
+app.db-shm
+app.db-wal
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Build artifacts
+*.tsbuildinfo
