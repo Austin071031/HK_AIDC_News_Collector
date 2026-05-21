@@ -26,6 +26,8 @@ class FakeLlmClient:
             tags=["power", "gpu_cluster"],
             entities=["Example Telecom", "Johor"],
             summary="Example Telecom announced a new AI data center cluster in Johor.",
+            key_points=["Key point 1", "Key point 2"],
+            extracted_content="Extracted content text",
             semantic_key="example-telecom-johor-ai-dc",
         )
 
@@ -77,6 +79,8 @@ async def test_run_daily_enrichment_partial_failure() -> None:
                 tags=[],
                 entities=[],
                 summary="Pass",
+                key_points=["Pass"],
+                extracted_content="Pass",
                 semantic_key="pass"
             )
 
@@ -97,6 +101,8 @@ async def test_run_daily_enrichment_partial_failure() -> None:
                 tags=[],
                 entities=[],
                 summary="Pass",
+                key_points=["Pass"],
+                extracted_content="Pass",
                 semantic_key="pass"
             )
 

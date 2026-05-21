@@ -51,6 +51,8 @@ def test_get_source_articles(client, db_session) -> None:
         rationale="test rationale",
         tags=["test"],
         entities=["test entity"],
+        key_points=["kp1"],
+        extracted_content="content",
         semantic_key="test_key",
         model_name="test_model"
     )

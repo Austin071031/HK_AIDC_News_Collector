@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSources, createSource, updateSource, deleteSource, getKeywords, createKeyword, deleteKeyword } from "../../lib/api";
+import { getSources, createSource, updateSource, deleteSource, getKeywords, createKeyword, deleteKeyword, getConfig, updateConfig } from "../../lib/api";
 import type { Source, Keyword } from "../../lib/types";
 
 export default function SettingsPage() {
   const [sources, setSources] = useState<Source[]>([]);
   const [keywords, setKeywords] = useState<Keyword[]>([]);
+  const [llmPrompt, setLlmPrompt] = useState("");
+  const [savingPrompt, setSavingPrompt] = useState(false);
   
   // Forms
   const [newSourceName, setNewSourceName] = useState("");
@@ -23,6 +25,15 @@ export default function SettingsPage() {
       const [srcs, kwds] = await Promise.all([getSources(), getKeywords()]);
       setSources(srcs);
       setKeywords(kwds);
+      
+      try {
+        const config = await getConfig("llm_filter_prompt");
+        if (config && config.value) {
+          setLlmPrompt(config.value);
+        }
+      } catch (err) {
+        console.warn("Could not load LLM prompt config");
+      }
     } catch (e) {
       console.error(e);
     }
@@ -60,6 +71,17 @@ export default function SettingsPage() {
     await createKeyword({ keyword: newKeyword, active: true });
     setNewKeyword("");
     loadData();
+  };
+
+  const handleSavePrompt = async () => {
+    setSavingPrompt(true);
+    try {
+      await updateConfig("llm_filter_prompt", llmPrompt);
+      alert("LLM Filter Prompt saved successfully!");
+    } catch (e) {
+      alert("Failed to save LLM Filter Prompt.");
+    }
+    setSavingPrompt(false);
   };
 
   return (
@@ -165,6 +187,27 @@ export default function SettingsPage() {
           </form>
         </section>
       </div>
+
+      {/* LLM Filter Config Section */}
+      <section style={{ background: "#fff", padding: "24px", borderRadius: "12px", boxShadow: "0 12px 40px rgba(0,0,0,0.08)", marginTop: "32px" }}>
+        <h2>LLM Filter Configuration</h2>
+        <p style={{ color: "#64748b", marginBottom: "16px", fontSize: "14px" }}>
+          This prompt is used to evaluate the scraped text of every discovered article. If the LLM replies "NO", the article is dropped.
+        </p>
+        <textarea 
+          value={llmPrompt}
+          onChange={e => setLlmPrompt(e.target.value)}
+          rows={4}
+          style={{ width: "100%", padding: "12px", border: "1px solid #ccc", borderRadius: "8px", fontFamily: "inherit", marginBottom: "16px", resize: "vertical" }}
+        />
+        <button 
+          onClick={handleSavePrompt}
+          disabled={savingPrompt}
+          style={{ padding: "10px 20px", background: savingPrompt ? "#94a3b8" : "#0f3d5d", color: "#fff", border: "none", borderRadius: "8px", cursor: savingPrompt ? "not-allowed" : "pointer", fontWeight: 600 }}
+        >
+          {savingPrompt ? "Saving..." : "Save Prompt"}
+        </button>
+      </section>
     </main>
   );
 }

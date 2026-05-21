@@ -16,7 +16,7 @@ def test_run_daily_job_dispatch() -> None:
     # and used in `hk_aidc_news.api.routes.jobs`.
     # Let's mock it at the place where it is used (jobs router).
     with patch("hk_aidc_news.api.routes.jobs.run_daily_pipeline_task") as mock_task:
-        response = client.post("/api/jobs/run-daily")
+        response = client.post("/api/jobs/run-rss-pipeline")
         
         assert response.status_code == 202
         assert response.json() == {"status": "accepted"}

@@ -54,62 +54,6 @@ export default async function HomePage({
             }}
           >
             <h2 style={{ margin: 0, fontSize: "24px" }}>News Feed</h2>
-            <form method="get" style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "flex-end", maxWidth: "800px" }}>
-              <select 
-                name="region" 
-                defaultValue={resolvedParams.region || ""}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
-              >
-                <option value="">All Regions</option>
-                <option value="hong_kong">Hong Kong</option>
-                <option value="mainland_china">Mainland China</option>
-                <option value="southeast_asia">Southeast Asia</option>
-              </select>
-              <select 
-                name="relevance" 
-                defaultValue={resolvedParams.relevance || ""}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
-              >
-                <option value="">All Relevance</option>
-                <option value="direct">Direct</option>
-                <option value="adjacent">Adjacent</option>
-              </select>
-              <select 
-                name="analyst_status" 
-                defaultValue={resolvedParams.analyst_status || ""}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
-              >
-                <option value="">All Status</option>
-                <option value="unread">Unread</option>
-                <option value="favorite">Favorite</option>
-                <option value="hidden">Hidden</option>
-              </select>
-              <input
-                type="text"
-                name="topic_tag"
-                placeholder="Filter by Topic..."
-                defaultValue={resolvedParams.topic_tag || ""}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee", width: "140px" }}
-              />
-              <input
-                type="date"
-                name="start_date"
-                defaultValue={resolvedParams.start_date || ""}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
-              />
-              <input
-                type="date"
-                name="end_date"
-                defaultValue={resolvedParams.end_date || ""}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid #d8e4ee" }}
-              />
-              <button 
-                type="submit"
-                style={{ padding: "6px 16px", borderRadius: "6px", background: "#0f3d5d", color: "#fff", border: "none", cursor: "pointer" }}
-              >
-                Filter
-              </button>
-            </form>
           </div>
 
           <Suspense fallback={<div style={{ textAlign: "center", padding: "40px" }}>Loading dashboard...</div>}>

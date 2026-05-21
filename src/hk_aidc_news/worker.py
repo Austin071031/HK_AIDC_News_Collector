@@ -14,55 +14,60 @@ from hk_aidc_news.models.search_keyword import SearchKeyword
 
 logger = logging.getLogger(__name__)
 
-async def run_daily_pipeline_task(settings: Settings) -> None:
-    logger.info("Starting daily pipeline task")
+async def run_daily_pipeline_task(settings: Settings, pipeline_type: str = "all") -> None:
+    logger.info(f"Starting daily pipeline task (type: {pipeline_type})")
     
     with session_factory() as db_session:
         try:
-            active_sources = (
-                db_session.query(Source)
-                .filter(Source.active == True)
-                .order_by(Source.priority.asc())
-                .all()
-            )
+            collectors = []
             
-            day_of_year = datetime.datetime.now().timetuple().tm_yday
-            
-            rss_feeds = {}
-            for source in active_sources:
-                if day_of_year % max(1, source.priority) != 0:
-                    logger.info(f"Skipping source {source.name} due to priority {source.priority} on day {day_of_year}")
-                    continue
+            if pipeline_type in ["all", "rss"]:
+                active_sources = (
+                    db_session.query(Source)
+                    .filter(Source.active == True)
+                    .order_by(Source.priority.asc())
+                    .all()
+                )
                 
-                if source.discovery_mode == "rss":
-                    if getattr(source, "rss_url", None):
-                        rss_url = source.rss_url
-                    else:
-                        rss_url = source.base_url if source.base_url.endswith(".xml") else f"{source.base_url.rstrip('/')}/rss"
-                    rss_feeds[source.name] = rss_url
+                day_of_year = datetime.datetime.now().timetuple().tm_yday
+                
+                rss_feeds = {}
+                for source in active_sources:
+                    if day_of_year % max(1, source.priority) != 0:
+                        logger.info(f"Skipping source {source.name} due to priority {source.priority} on day {day_of_year}")
+                        continue
+                    
+                    if source.discovery_mode == "rss":
+                        if getattr(source, "rss_url", None):
+                            rss_url = source.rss_url
+                        else:
+                            rss_url = source.base_url if source.base_url.endswith(".xml") else f"{source.base_url.rstrip('/')}/rss"
+                        rss_feeds[source.name] = rss_url
+                
+                collectors.append(RssCollector(feeds=rss_feeds))
             
-            rss_collector = RssCollector(feeds=rss_feeds)
-            
-            active_keywords = db_session.query(SearchKeyword).filter(SearchKeyword.active == True).all()
-            queries = [k.keyword for k in active_keywords]
-            if not queries:
-                queries = ["Hong Kong AI data center"]
-            
-            firecrawl_collector = FirecrawlCollector(
-                api_key=settings.firecrawl_api_key,
-                base_url=settings.firecrawl_base_url,
-                queries=queries,
-                limit=settings.default_query_limit,
-            )
+            if pipeline_type in ["all", "search"]:
+                active_keywords = db_session.query(SearchKeyword).filter(SearchKeyword.active == True).all()
+                queries = [k.keyword for k in active_keywords]
+                if not queries:
+                    queries = ["Hong Kong AI data center"]
+                
+                collectors.append(
+                    FirecrawlCollector(
+                        api_key=settings.firecrawl_api_key,
+                        base_url=settings.firecrawl_base_url,
+                        queries=queries,
+                        limit=settings.default_query_limit,
+                    )
+                )
             
             # The user might provide a Deepseek API key instead of OpenAI.
             # Determine base_url and correct api_key based on configuration.
-            import os
+            api_key = settings.llm_api_key or settings.openai_api_key
+            base_url = settings.llm_base_url if settings.llm_base_url else None
             
-            # Use deepseek base URL if the model starts with "deepseek"
-            base_url = None
-            api_key = settings.openai_api_key or settings.llm_api_key
-            if settings.llm_model.startswith("deepseek"):
+            # Use deepseek base URL if the model starts with "deepseek" and no base URL is explicitly provided
+            if not base_url and settings.llm_model.startswith("deepseek"):
                 base_url = "https://api.deepseek.com/v1"
             
             llm_client = OpenAiCompatibleLlmClient(
@@ -73,11 +78,11 @@ async def run_daily_pipeline_task(settings: Settings) -> None:
             enrichment_service = EnrichmentService(llm_client)
 
             logger.info("Running discovery...")
-            discovered = await run_daily_discovery(collectors=[firecrawl_collector, rss_collector])
+            discovered = await run_daily_discovery(collectors=collectors)
             logger.info(f"Discovered {len(discovered)} items.")
             
             logger.info("Running ingestion...")
-            ingested = run_daily_ingestion(discovered, db_session, settings=settings)
+            ingested = await run_daily_ingestion(discovered, db_session, settings=settings, llm_client=llm_client)
             logger.info(f"Ingested {len(ingested)} new documents.")
             
             logger.info("Running enrichment...")

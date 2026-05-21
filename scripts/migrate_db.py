@@ -10,6 +10,7 @@ from hk_aidc_news.db import engine, session_factory
 from hk_aidc_news.models.base import Base
 from hk_aidc_news.models.source import Source
 from hk_aidc_news.models.search_keyword import SearchKeyword
+from hk_aidc_news.models.system_config import SystemConfig
 
 def seed_data(session_maker):
     with session_maker() as db_session:
@@ -40,6 +41,14 @@ def seed_data(session_maker):
             db_session.add(default_keyword)
             db_session.commit()
             print("Seeded default search keyword.")
+
+        # Seed SystemConfig
+        if db_session.query(SystemConfig).filter(SystemConfig.key == "llm_filter_prompt").count() == 0:
+            default_prompt = "Evaluate if this text is related to Hong Kong AND AI Data Centers. If it is relevant, reply 'YES'. If it is not relevant, reply 'NO'. Provide only the YES or NO answer."
+            config = SystemConfig(key="llm_filter_prompt", value=default_prompt)
+            db_session.add(config)
+            db_session.commit()
+            print("Seeded default llm_filter_prompt.")
 
 def migrate():
     with engine.connect() as conn:

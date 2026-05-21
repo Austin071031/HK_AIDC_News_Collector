@@ -81,6 +81,8 @@ class EnrichmentService:
                 tags=[],
                 entities=[],
                 summary="",
+                key_points=[],
+                extracted_content="",
                 semantic_key="",
             )
 
@@ -120,6 +122,8 @@ async def run_daily_enrichment(
             enriched_doc["tags"] = result.tags
             enriched_doc["entities"] = result.entities
             enriched_doc["summary"] = result.summary
+            enriched_doc["key_points"] = result.key_points
+            enriched_doc["extracted_content"] = result.extracted_content
             enriched_doc["semantic_key"] = result.semantic_key
             enriched_docs.append(enriched_doc)
             
@@ -133,6 +137,8 @@ async def run_daily_enrichment(
                         existing.tags = result.tags
                         existing.entities = result.entities
                         existing.summary = result.summary
+                        existing.key_points = result.key_points
+                        existing.extracted_content = result.extracted_content
                         existing.semantic_key = result.semantic_key
                         existing.model_name = model_name
                     else:
@@ -144,6 +150,8 @@ async def run_daily_enrichment(
                             tags=result.tags,
                             entities=result.entities,
                             summary=result.summary,
+                            key_points=result.key_points,
+                            extracted_content=result.extracted_content,
                             semantic_key=result.semantic_key,
                             model_name=model_name
                         )

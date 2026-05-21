@@ -33,7 +33,8 @@ def get_articles(
     stmt = (
         select(Article, EnrichmentRecord, Source)
         .outerjoin(EnrichmentRecord, Article.id == EnrichmentRecord.article_id)
-        .join(Source, Article.source_id == Source.id)
+        .outerjoin(Source, Article.source_id == Source.id)
+        .order_by(Article.published_at.desc())
     )
     
     if region:
@@ -58,14 +59,16 @@ def get_articles(
     for article, enrichment, source in results:
         article_dict = {c.name: getattr(article, c.name) for c in article.__table__.columns}
         
-        article_dict["source_name"] = source.name
-        article_dict["source_region"] = source.region
+        article_dict["source_name"] = source.name if source else "Organic Search"
+        article_dict["source_region"] = source.region if source else "Unknown"
 
         if enrichment:
             article_dict["enrichment"] = {
                 "summary": enrichment.summary,
                 "relevance": enrichment.relevance,
-                "tags": enrichment.tags
+                "tags": enrichment.tags,
+                "key_points": enrichment.key_points,
+                "extracted_content": enrichment.extracted_content
             }
         else:
             article_dict["enrichment"] = None

@@ -22,13 +22,22 @@ router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 def get_settings() -> Settings:
     return Settings()
 
-@router.post("/run-daily", status_code=202)
-async def run_daily(
+@router.post("/run-rss-pipeline", status_code=202)
+async def run_rss_pipeline(
     background_tasks: BackgroundTasks,
     settings: Settings = Depends(get_settings),
 ) -> dict:
     setup_log_stream()
-    background_tasks.add_task(run_daily_pipeline_task, settings)
+    background_tasks.add_task(run_daily_pipeline_task, settings, "rss")
+    return {"status": "accepted"}
+
+@router.post("/run-search-pipeline", status_code=202)
+async def run_search_pipeline(
+    background_tasks: BackgroundTasks,
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    setup_log_stream()
+    background_tasks.add_task(run_daily_pipeline_task, settings, "search")
     return {"status": "accepted"}
 
 @router.post("/cleanup", status_code=200)

@@ -10,6 +10,8 @@ from hk_aidc_news.ingestion.prefilter import is_viable_candidate
 from hk_aidc_news.models.raw_document import RawDocument
 from hk_aidc_news.models.article import Article
 from hk_aidc_news.models.source import Source
+from hk_aidc_news.llm.client import OpenAiCompatibleLlmClient
+from hk_aidc_news.models.system_config import SystemConfig
 from dateutil import parser
 
 
@@ -97,28 +99,45 @@ def normalize_candidate(
     }
 
 
-def run_daily_ingestion(
+async def run_daily_ingestion(
     candidates: Iterable,
     db_session: Optional[Session] = None,
     settings: Optional[object] = None,
+    llm_client: Optional[OpenAiCompatibleLlmClient] = None,
 ) -> List[Dict]:
     normalized = []
     firecrawl_key = getattr(settings, "firecrawl_api_key", None) if settings else None
     
+    # Fetch LLM filter prompt if db_session is available
+    llm_filter_prompt = "Evaluate if this text is related to Hong Kong AND AI Data Centers. If it is relevant, reply 'YES'. If it is not relevant, reply 'NO'."
+    if db_session:
+        config = db_session.query(SystemConfig).filter_by(key="llm_filter_prompt").first()
+        if config and config.value:
+            llm_filter_prompt = config.value
+
     for candidate in candidates:
         try:
             html_content = fetch_html(candidate.url, firecrawl_key=firecrawl_key)
             doc = normalize_candidate(candidate, html_content)
             normalized.append(doc)
         except Exception:
-            # Ensure it doesn't crash the pipeline but continue processing the rest
             continue
 
+    # Prefilter: domain, language, length
     viable = [doc for doc in normalized if is_viable_candidate(doc)]
+    
+    # LLM Filter
+    llm_passed_docs = []
+    if llm_client:
+        for doc in viable:
+            if await llm_client.evaluate_relevance(doc["raw_text"], llm_filter_prompt):
+                llm_passed_docs.append(doc)
+    else:
+        llm_passed_docs = viable
     
     final_docs = []
     if db_session:
-        for doc in viable:
+        for doc in llm_passed_docs:
             try:
                 with db_session.begin_nested():
                     existing = db_session.query(RawDocument).filter_by(canonical_url=doc["canonical_url"]).first()
@@ -183,6 +202,6 @@ def run_daily_ingestion(
             except Exception as e:
                 continue
     else:
-        final_docs = viable
+        final_docs = llm_passed_docs
                 
     return final_docs

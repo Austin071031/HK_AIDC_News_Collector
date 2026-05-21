@@ -7,6 +7,7 @@ from hk_aidc_news.models.enrichment import EnrichmentRecord
 from hk_aidc_news.models.raw_document import RawDocument
 from hk_aidc_news.models.source import Source
 from hk_aidc_news.models.search_keyword import SearchKeyword
+from hk_aidc_news.models.system_config import SystemConfig
 
 __all__ = [
     "AnalystAction",
@@ -19,4 +20,5 @@ __all__ = [
     "RawDocument",
     "Source",
     "SearchKeyword",
+    "SystemConfig",
 ]

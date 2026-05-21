@@ -16,5 +16,7 @@ class EnrichmentRecord(Base):
     tags: Mapped[list] = mapped_column(JSON)
     entities: Mapped[list] = mapped_column(JSON)
     summary: Mapped[str] = mapped_column(Text)
+    key_points: Mapped[list] = mapped_column(JSON, default=list)
+    extracted_content: Mapped[str] = mapped_column(Text, default="")
     semantic_key: Mapped[str] = mapped_column(String(255))
     model_name: Mapped[str] = mapped_column(String(255), default="")

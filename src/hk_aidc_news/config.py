@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     firecrawl_base_url: str = "https://api.firecrawl.dev"
     openai_api_key: str = ""
     llm_api_key: str = ""
-    llm_model: str = "gpt-4.1-mini"
+    llm_base_url: str = ""
+    llm_model: str = "gpt-4o-mini"
     default_query_limit: int = Field(default=25, ge=1, le=100)
 
     @field_validator("database_url")

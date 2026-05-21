@@ -15,6 +15,8 @@ async def test_llm_client_calls_openai():
         tags=["tag1"],
         entities=["entity1"],
         summary="summary",
+        key_points=["kp1"],
+        extracted_content="content",
         semantic_key="key"
     ).model_dump_json()
 

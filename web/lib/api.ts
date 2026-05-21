@@ -171,3 +171,19 @@ export async function cleanupDatabase(): Promise<{ status: string; message: stri
   return response.json();
 }
 
+export async function getConfig(key: string): Promise<{ key: string; value: string | null }> {
+  const response = await fetch(`${API_BASE_URL}/api/config/${key}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Failed to fetch config");
+  return response.json();
+}
+
+export async function updateConfig(key: string, value: string): Promise<{ key: string; value: string | null }> {
+  const response = await fetch(`${API_BASE_URL}/api/config/${key}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ value }),
+  });
+  if (!response.ok) throw new Error("Failed to update config");
+  return response.json();
+}
+

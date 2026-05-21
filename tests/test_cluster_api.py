@@ -60,7 +60,7 @@ def test_cluster_actions_endpoint(client, db_session) -> None:
 
 @patch("hk_aidc_news.api.routes.jobs.run_daily_pipeline_task")
 def test_manual_run_endpoint_returns_accepted(mock_task, client) -> None:
-    response = client.post("/api/jobs/run-daily")
+    response = client.post("/api/jobs/run-rss-pipeline")
     assert response.status_code == 202
     assert response.json()["status"] == "accepted"
     mock_task.assert_called_once()

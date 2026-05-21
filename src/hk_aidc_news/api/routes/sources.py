@@ -150,7 +150,9 @@ def get_source_articles(
             article_dict["enrichment"] = {
                 "summary": enrichment.summary,
                 "relevance": enrichment.relevance,
-                "tags": enrichment.tags
+                "tags": enrichment.tags,
+                "key_points": enrichment.key_points,
+                "extracted_content": enrichment.extracted_content
             }
         else:
             article_dict["enrichment"] = None

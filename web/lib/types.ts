@@ -60,6 +60,8 @@ export interface ArticleEnrichment {
   summary: string;
   relevance: string;
   tags: string[];
+  key_points?: string[];
+  extracted_content?: string;
 }
 
 export interface SourceArticle {

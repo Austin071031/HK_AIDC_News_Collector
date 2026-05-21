@@ -11,8 +11,9 @@ class OpenAiCompatibleLlmClient:
 
     async def enrich(self, title: str, body: str, language: str) -> EnrichmentResult:
         prompt = (
-            "Classify and summarize this article in JSON. "
-            "Ensure the summary is formatted as a concise list of bullet points, rather than a single paragraph. "
+            "Classify, extract key information, and summarize this article in JSON. "
+            "Ensure the `summary` is a brief paragraph, `key_points` is an array of 3-5 critical bullet points, "
+            "and `extracted_content` is a concise, well-structured rewrite of the core narrative. "
             f"Language: {language}\nTitle: {title}\nBody: {body[:4000]}"
             f"\n\nThe JSON must follow this schema: {EnrichmentResult.model_json_schema()}"
         )
@@ -24,3 +25,23 @@ class OpenAiCompatibleLlmClient:
         if not response.choices or not response.choices[0].message.content:
             raise ValueError("Failed to parse response")
         return EnrichmentResult.model_validate_json(response.choices[0].message.content)
+
+    async def evaluate_relevance(self, text: str, prompt: str) -> bool:
+        eval_prompt = (
+            f"{prompt}\n\n"
+            f"Text to evaluate:\n{text[:4000]}"
+        )
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": eval_prompt}],
+                max_tokens=500,
+                temperature=0.1,
+            )
+            if not response.choices or not response.choices[0].message.content:
+                return False
+            answer = response.choices[0].message.content.strip().upper()
+            return "YES" in answer
+        except Exception as e:
+            print(f"LLM Evaluation failed with exception: {e}")
+            return False

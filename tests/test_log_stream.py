@@ -48,14 +48,12 @@ async def test_log_generator_keepalive() -> None:
     # Need to mock wait_for to simulate timeout quickly
     # Also need to prevent asyncio.Queue.get() from returning an unawaited coroutine
     with pytest.MonkeyPatch.context() as m:
-        async def mock_wait_for(*args, **kwargs):
+        async def mock_wait_for(fut, *args, **kwargs):
+            if hasattr(fut, "close"):
+                fut.close()
             raise asyncio.TimeoutError()
             
-        async def mock_get():
-            pass
-            
         m.setattr(asyncio, "wait_for", mock_wait_for)
-        m.setattr(hk_aidc_news.log_stream.log_queue, "get", mock_get)
         
         val = await generator.__anext__()
         assert val == ": keep-alive\n\n"

@@ -8,6 +8,7 @@ from hk_aidc_news.api.routes.health import router as health_router
 from hk_aidc_news.api.routes.jobs import router as jobs_router
 from hk_aidc_news.api.routes.keywords import router as keywords_router
 from hk_aidc_news.api.routes.sources import router as sources_router
+from hk_aidc_news.api.routes.config import router as config_router
 
 
 def create_app() -> FastAPI:
@@ -30,4 +31,5 @@ def create_app() -> FastAPI:
     app.include_router(jobs_router)
     app.include_router(keywords_router)
     app.include_router(sources_router)
+    app.include_router(config_router)
     return app

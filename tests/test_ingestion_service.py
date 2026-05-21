@@ -1,3 +1,6 @@
+from unittest.mock import patch, AsyncMock
+import pytest
+
 from hk_aidc_news.discovery.schemas import DiscoveryCandidate
 from hk_aidc_news.ingestion.extractor import extract_text
 from hk_aidc_news.ingestion.service import normalize_candidate
@@ -27,7 +30,8 @@ def test_normalize_candidate_builds_raw_document_payload() -> None:
     assert payload["raw_text"] == "Hello world"
 
 
-def test_run_daily_ingestion_partial_failure(monkeypatch) -> None:
+@pytest.mark.asyncio
+async def test_run_daily_ingestion_partial_failure(monkeypatch) -> None:
     from hk_aidc_news.ingestion.service import run_daily_ingestion
 
     c1 = DiscoveryCandidate(url="http://example.com/fail", title="Fail", source_name="src", discovered_via="rss")
@@ -50,7 +54,7 @@ def test_run_daily_ingestion_partial_failure(monkeypatch) -> None:
     monkeypatch.setattr("hk_aidc_news.ingestion.service.normalize_candidate", mock_normalize)
 
     # run_daily_ingestion should continue despite the first one raising an error
-    results = run_daily_ingestion([c1, c2])
+    results = await run_daily_ingestion([c1, c2])
     
     assert len(results) == 1
     assert results[0]["url"] == "http://example.com/pass"

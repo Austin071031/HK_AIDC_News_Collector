@@ -1,24 +1,13 @@
 from urllib.parse import urlparse
-
 import langdetect
 from langdetect.lang_detect_exception import LangDetectException
-
-ALLOWED_DOMAINS = {
-    "research.hktdc.com",
-    "www.scmp.com",
-    "36kr.com",
-    "www.datacenterdynamics.com",
-    "example.com",
-}
-
-TOPIC_KEYWORDS = {
-    "data center", "data centre", "gpu", "artificial intelligence", "ai", "compute", 
-    "数据中心", "人工智能", "算力", "芯片", "服务器"
-}
-
 from typing import Dict
 
-import re
+BLOCKED_DOMAINS = {"spam-seo-farm.com"}
+REQUIRED_KEYWORDS = [
+    "data center", "gpu", "ai ", "artificial intelligence", "compute",
+    "人工智能", "数据中心", "算力", "llm", "machine learning"
+]
 
 def is_viable_candidate(normalized_doc: Dict) -> bool:
     text = normalized_doc.get("raw_text", "")
@@ -27,11 +16,12 @@ def is_viable_candidate(normalized_doc: Dict) -> bool:
     # Length check (lowered threshold to accommodate concise Chinese texts)
     if len(text) < 40:
         return False
-        
-    # Domain allowlist check
+
+    # Domain blocklist
     if url:
-        domain = urlparse(url).netloc
-        if domain not in ALLOWED_DOMAINS:
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc.lower()
+        if any(blocked in domain for blocked in BLOCKED_DOMAINS):
             return False
 
     # Language detection
@@ -42,21 +32,10 @@ def is_viable_candidate(normalized_doc: Dict) -> bool:
     except LangDetectException:
         return False
 
-    # Keyword topic gates
+    # Keyword gates
     text_lower = text.lower()
-    
-    # Check for exact word match for short acronyms like 'ai', otherwise substring match
-    has_keyword = False
-    for keyword in TOPIC_KEYWORDS:
-        if keyword == "ai":
-            if re.search(r'\bai\b', text_lower):
-                has_keyword = True
-                break
-        elif keyword in text_lower:
-            has_keyword = True
-            break
-            
-    if not has_keyword:
+    # Ensure at least one required keyword is present
+    if not any(kw in text_lower for kw in REQUIRED_KEYWORDS):
         return False
 
     return True

@@ -14,11 +14,11 @@ export default function PipelinePage() {
     scrollToBottom();
   }, [logs]);
 
-  const handleRunPipeline = async () => {
+  const handleRunPipeline = async (type: "rss" | "search") => {
     setIsRunning(true);
-    setLogs((prev) => [...prev, "> Starting Pipeline..."]);
+    setLogs((prev) => [...prev, `> Starting ${type.toUpperCase()} Pipeline...`]);
     try {
-      await fetch("http://localhost:8000/api/jobs/run-daily", { method: "POST" });
+      await fetch(`http://localhost:8000/api/jobs/run-${type}-pipeline`, { method: "POST" });
       
       const eventSource = new EventSource("http://localhost:8000/api/jobs/stream");
       eventSource.onmessage = (event) => {
@@ -45,21 +45,38 @@ export default function PipelinePage() {
       <section style={{ background: "#fff", padding: "24px", borderRadius: "16px", boxShadow: "0 12px 32px rgba(0,0,0,0.05)", marginBottom: "32px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <h2 style={{ margin: 0, fontSize: "20px" }}>Execution Control</h2>
-          <button 
-            onClick={handleRunPipeline}
-            disabled={isRunning}
-            style={{ 
-              padding: "10px 20px", 
-              background: isRunning ? "#94a3b8" : "#0ea5e9", 
-              color: "#fff", 
-              border: "none", 
-              borderRadius: "8px", 
-              cursor: isRunning ? "not-allowed" : "pointer",
-              fontWeight: 600
-            }}
-          >
-            {isRunning ? "Running..." : "▶ Run Daily Pipeline"}
-          </button>
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button 
+              onClick={() => handleRunPipeline("rss")}
+              disabled={isRunning}
+              style={{ 
+                padding: "10px 20px", 
+                background: isRunning ? "#94a3b8" : "#10b981", 
+                color: "#fff", 
+                border: "none", 
+                borderRadius: "8px", 
+                cursor: isRunning ? "not-allowed" : "pointer",
+                fontWeight: 600
+              }}
+            >
+              {isRunning ? "Running..." : "▶ Run RSS Pipeline"}
+            </button>
+            <button 
+              onClick={() => handleRunPipeline("search")}
+              disabled={isRunning}
+              style={{ 
+                padding: "10px 20px", 
+                background: isRunning ? "#94a3b8" : "#0ea5e9", 
+                color: "#fff", 
+                border: "none", 
+                borderRadius: "8px", 
+                cursor: isRunning ? "not-allowed" : "pointer",
+                fontWeight: 600
+              }}
+            >
+              {isRunning ? "Running..." : "▶ Run Search Pipeline"}
+            </button>
+          </div>
         </div>
         
         <div style={{ background: "#1e293b", color: "#a1a1aa", fontFamily: "monospace", padding: "16px", borderRadius: "8px", height: "300px", overflowY: "auto", fontSize: "13px", lineHeight: "1.6" }}>

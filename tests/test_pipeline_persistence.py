@@ -34,11 +34,17 @@ def test_daily_job_persists_records(client, db_session, db_session_factory, monk
             tags=["mock"],
             entities=["mock"],
             summary="mock summary",
+            key_points=["mock key point"],
+            extracted_content="mock extracted content",
             semantic_key="mock-key"
         )
     monkeypatch.setattr("hk_aidc_news.llm.client.OpenAiCompatibleLlmClient.enrich", mock_enrich)
 
-    response = client.post("/api/jobs/run-daily")
+    async def mock_evaluate_relevance(*args, **kwargs):
+        return True
+    monkeypatch.setattr("hk_aidc_news.llm.client.OpenAiCompatibleLlmClient.evaluate_relevance", mock_evaluate_relevance)
+
+    response = client.post("/api/jobs/run-rss-pipeline")
     assert response.status_code == 202
     
     # Verify records were added to the DB
